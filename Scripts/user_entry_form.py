@@ -1,0 +1,215 @@
+# -*- coding: utf-8 -*-
+
+from messagebox import MsgBox
+from enneagram import Enneagram
+from treeview import TreeviewToplevel
+from modules import tk, ttk, ConfigParser, Nominatim
+
+
+class UserEntryForm(tk.Frame):
+    def __init__(self, icons, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pack()
+        self.icons = icons
+        self.style = ttk.Style()
+        self.entry_names = [
+            "Name",
+            "Gender",
+            ["Day", "Month", "Year"],
+            ["Hour", "Minute"],
+            ["Place"],
+            ["Latitude", "Longitude"]
+        ]
+        self.entries = {}
+        self.var = tk.StringVar()
+        for i, j in enumerate(self.entry_names):
+            frame = tk.Frame(master=self)
+            frame.pack()
+            if isinstance(j, list):
+                for k, m in enumerate(j):
+                    sub_frame = tk.Frame(master=frame)
+                    sub_frame.pack(side="left", padx=5)
+                    label = tk.Label(master=sub_frame, text=m)
+                    label.pack()
+                    if m in ["Month", "Day", "Hour", "Minute"]:
+                        entry = ttk.Entry(
+                            master=sub_frame,
+                            width=2,
+                            style=f"{m}.TEntry"
+                        )
+                        entry.bind(
+                            sequence="<KeyRelease>",
+                            func=lambda event, widget=entry: self.max_char(
+                                widget=widget,
+                                limit=2
+                            )
+                        )
+                        entry.pack()
+                        self.entries[m] = entry
+                    elif m == "Year":
+                        entry = ttk.Entry(
+                            master=sub_frame,
+                            width=4,
+                            style=f"{m}.TEntry"
+                        )
+                        entry.bind(
+                            sequence="<KeyRelease>",
+                            func=lambda event, widget=entry: self.max_char(
+                                widget=widget,
+                                limit=4
+                            )
+                        )
+                        entry.pack()
+                        self.entries[m] = entry
+                    else:
+                        if m == "Place":
+                            width = 50
+                            state = "normal"
+                            entry = ttk.Combobox(
+                                master=sub_frame,
+                                width=width,
+                                style="TCombobox",
+                                state=state,
+                                values=[]
+                            )
+                            entry.bind(
+                                sequence="<Return>",
+                                func=lambda event, widget=entry:
+                                self.find_coordinates(
+                                    widget=widget
+                                )
+                            )
+                        else:
+                            width = 10
+                            state = "readonly"
+                            entry = ttk.Entry(
+                                master=sub_frame,
+                                width=width,
+                                style=f"{m}.TEntry",
+                                state=state
+                            )
+                    entry.pack()
+                    self.entries[m] = entry
+            else:
+                label = tk.Label(master=frame, text=j)
+                label.pack()
+                if i == 0:
+                    entry = ttk.Entry(frame, style=f"{j}.TEntry")
+                    entry.bind(
+                        sequence="<KeyRelease>",
+                        func=lambda event, widget=entry: self.control(
+                            widget=widget
+                        )
+                    )
+                    entry.pack()
+                    self.entries[j] = entry
+                elif i == 1:
+                    option = tk.OptionMenu(frame, self.var, "M", "F", "N/A")
+                    option.pack()
+                    self.entries[j] = self.var
+        self.button = tk.Button(
+            master=self,
+            text="Calculate",
+            command=self.calculate
+        )
+        self.button.pack(pady=50)
+
+    def find_coordinates(self, widget):
+        nominatim = Nominatim(user_agent=__name__)
+        try:
+            locations = {
+                i.address: (i.latitude, i.longitude)
+                for i in nominatim.geocode(widget.get(), exactly_one=False)
+            }
+            widget.config(values=[k for k in locations])
+            widget.event_generate("<Down>")
+            widget.bind(
+                "<<ComboboxSelected>>",
+                lambda event: self.insert_coordinates(widget, locations)
+            )
+        except:
+            MsgBox(
+                title="Info",
+                message="Geocoding service is \n"
+                        "not available now.\nTry again.",
+                icons=self.icons,
+                level="info"
+            )
+
+    def insert_coordinates(self, widget, locations):
+        lat, lon = locations[widget.get()]
+        self.entries["Latitude"].config(state="normal")
+        self.entries["Longitude"].config(state="normal")
+        self.entries["Latitude"].delete("0", "end")
+        self.entries["Longitude"].delete("0", "end")
+        self.entries["Latitude"].insert("insert", lat)
+        self.entries["Longitude"].insert("insert", lon)
+        self.entries["Latitude"].config(state="readonly")
+        self.entries["Longitude"].config(state="readonly")
+
+    def control(self, widget):
+        if widget.get():
+            self.style.configure(
+                widget.cget("style"),
+                fieldbackground="white"
+            )
+
+    def max_char(self, widget, limit):
+        if len(widget.get()) > limit:
+            widget.delete(str(limit))
+        if widget.get():
+            try:
+                float(widget.get())
+                self.style.configure(
+                    widget.cget("style"),
+                    fieldbackground="white"
+                )
+            except ValueError:
+                self.style.configure(
+                    widget.cget("style"),
+                    fieldbackground="red"
+                )
+        else:
+            self.style.configure(
+                widget.cget("style"),
+                fieldbackground="white"
+            )
+
+    def calculate(self):
+        config = ConfigParser()
+        config.read("default.ini")
+        hsys = config["HOUSE SYSTEM"]["hsys"]
+        for k, v in self.entries.items():
+            if not v.get():
+                if isinstance(v, ttk.Entry):
+                    self.style.configure(
+                        v.cget("style"),
+                        fieldbackground="red"
+                    )
+
+        if all(v.get() for k, v in self.entries.items() if k != "Place"):
+            user = Enneagram(
+                year=int(self.entries["Year"].get()),
+                month=int(self.entries["Month"].get()),
+                day=int(self.entries["Day"].get()),
+                hour=int(self.entries["Hour"].get()),
+                minute=int(self.entries["Minute"].get()),
+                second=0,
+                lat=float(self.entries["Latitude"].get()),
+                lon=float(self.entries["Longitude"].get()),
+                hsys=hsys
+            )
+            TreeviewToplevel(
+                values=user.get_all_scores(),
+                info={k: v for k, v in self.entries.items() if k != "Place"},
+                hsys=hsys,
+                icons=self.icons,
+                patterns=user.patterns
+            )
+        else:
+            MsgBox(
+                title="warning",
+                message="You didn't fill all fields.",
+                level="warning",
+                icons=self.icons
+            )
