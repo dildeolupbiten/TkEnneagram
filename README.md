@@ -44,11 +44,11 @@ The program has several requirements. But users don't need to install them manua
 
 **6.** If all the entries are filled as described above, users could the **Calculate** button. And short after a window like below is created.
 
-![img6](https://user-images.githubusercontent.com/29302909/92814215-83996400-f3cb-11ea-99a5-c154f7012f07.png)
+![img5](https://user-images.githubusercontent.com/29302909/92814222-85fbbe00-f3cb-11ea-84cf-f2f50fd220ea.png)
 
 **7.** By clicking to the **Export** button, users can export the results into a spreadsheet file like below.
 
-![img5](https://user-images.githubusercontent.com/29302909/92814222-85fbbe00-f3cb-11ea-84cf-f2f50fd220ea.png)
+![img6](https://user-images.githubusercontent.com/29302909/92814215-83996400-f3cb-11ea-99a5-c154f7012f07.png)
 
 ## Licenses
 
