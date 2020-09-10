@@ -28,7 +28,7 @@ The program has several requirements. But users don't need to install them manua
 
 **2.** The users should fill all the entries as shown in the image below.
 
-![img1](https://user-images.githubusercontent.com/29302909/92814227-87c58180-f3cb-11ea-96c9-366a8cd50f11.png)
+![img1](https://user-images.githubusercontent.com/29302909/92821314-9b74e600-f3d3-11ea-9d10-4e90b0fbb1a4.png)
 
 **3.** The geocoding service needs an internet connection. To get the coordinates of a place, users should press **Enter** and/or **Return** key. Sometimes the Geocoding Service may not respond and the program raises a messagebox like below. In this case, it's recommended to close this messagebox and try again.
 
@@ -36,11 +36,11 @@ The program has several requirements. But users don't need to install them manua
 
 **4.** After pressed to **Enter**, if the entered value is a valid place, a drop-down menu is opened under the place entry. Users can select the country from this list.
 
-![img3](https://user-images.githubusercontent.com/29302909/92814224-872ceb00-f3cb-11ea-9c10-abe55c5bc7bf.png)
+![img3](https://user-images.githubusercontent.com/29302909/92821307-99ab2280-f3d3-11ea-8d41-4b4c5ec73208.png)
 
 **5.** After the selection, the latitude and longitude values of this place are inserted to the related entries. The state of the latitude and longitude entries are readonly.
 
-![img4](https://user-images.githubusercontent.com/29302909/92814220-85632780-f3cb-11ea-9124-174f070bdd96.png)
+![img4](https://user-images.githubusercontent.com/29302909/92821311-9adc4f80-f3d3-11ea-8c67-735bb42abc34.png)
 
 **6.** If all the entries are filled as described above, users could the **Calculate** button. And short after a window like below is created.
 
