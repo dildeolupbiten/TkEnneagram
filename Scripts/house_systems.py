@@ -5,7 +5,6 @@ from modules import tk, ConfigParser
 
 
 class HouseSystemsToplevel(tk.Toplevel):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.title("House Systems")
