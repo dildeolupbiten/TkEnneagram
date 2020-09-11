@@ -14,8 +14,8 @@ if exist ./venv (
     python -m venv venv
     cd venv/Scripts
     activate.bat
-    pip install --upgrade pip setuptools wheel
+    python -m pip install --upgrade pip setuptools wheel
     cd ../..
-    pip install -r requirements.txt
+    python -m pip install -r requirements.txt
     python Scripts
 )
