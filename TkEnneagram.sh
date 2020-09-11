@@ -7,6 +7,8 @@ if [ ! -d ./venv ]; then
     source venv/bin/activate
     pip install --upgrade pip setuptools wheel
     pip install -r requirements.txt
+    python Scripts
+else
+    source venv/bin/activate
+    python Scripts
 fi
-source venv/bin/activate
-python Scripts
