@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from modules import swe
+from .modules import swe
 
 SIGNS = {
     "Aries": {

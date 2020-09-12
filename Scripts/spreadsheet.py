@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from modules import Workbook
+from .modules import Workbook
 
 
 class Spreadsheet(Workbook):

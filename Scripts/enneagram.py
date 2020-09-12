@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from modules import np
-from scores import scores
-from zodiac import Zodiac
+from .modules import np
+from .scores import scores
+from .zodiac import Zodiac
 
 
 class Enneagram:

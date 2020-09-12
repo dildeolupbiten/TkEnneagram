@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from messagebox import MsgBox
-from enneagram import Enneagram
-from treeview import TreeviewToplevel
-from modules import tk, ttk, ConfigParser, Nominatim
+from .messagebox import MsgBox
+from .enneagram import Enneagram
+from .treeview import TreeviewToplevel
+from .modules import tk, ttk, ConfigParser, Nominatim
 
 
 class UserEntryForm(tk.Frame):

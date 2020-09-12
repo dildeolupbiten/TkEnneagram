@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from modules import tk
+from .modules import tk
 
 
 class MsgBox(tk.Toplevel):

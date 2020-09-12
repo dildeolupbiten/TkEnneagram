@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from modules import os, ImageTk
+from .modules import os, ImageTk
 
 
 def create_image_files(path):

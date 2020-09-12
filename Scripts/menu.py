@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from modules import tk
-from house_systems import HouseSystemsToplevel
+from .modules import tk
+from .house_systems import HouseSystemsToplevel
 
 
 class Menu(tk.Menu):

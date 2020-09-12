@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from constants import SIGNS
+from .constants import SIGNS
 
 
 def convert_degree(degree):

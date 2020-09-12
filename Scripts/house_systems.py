@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from constants import HOUSE_SYSTEMS
-from modules import tk, ConfigParser
+from .constants import HOUSE_SYSTEMS
+from .modules import tk, ConfigParser
 
 
 class HouseSystemsToplevel(tk.Toplevel):

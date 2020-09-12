@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from messagebox import MsgBox
-from modules import np, tk, ttk
-from spreadsheet import Spreadsheet
-from conversions import dd_to_dms, convert_degree
-from constants import HOUSE_SYSTEMS, SIGNS, PLANETS
+from .messagebox import MsgBox
+from .modules import np, tk, ttk
+from .spreadsheet import Spreadsheet
+from .conversions import dd_to_dms, convert_degree
+from .constants import HOUSE_SYSTEMS, SIGNS, PLANETS
 
 
 class Treeview(ttk.Treeview):

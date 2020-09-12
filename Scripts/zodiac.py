@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from constants import PLANETS
-from modules import os, dt, tz, swe, timezone, TimezoneFinder
-from conversions import convert_degree, reverse_convert_degree
+from .constants import PLANETS
+from .modules import os, dt, tz, swe, timezone, TimezoneFinder
+from .conversions import convert_degree, reverse_convert_degree
 
 swe.set_ephe_path(os.path.join(os.getcwd(), "Eph"))
 
