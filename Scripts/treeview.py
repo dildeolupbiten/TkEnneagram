@@ -227,7 +227,9 @@ class TreeviewToplevel(tk.Toplevel):
                 self.treeview.item(i)["values"]
                 for i in self.treeview.get_children()
             ],
-            filename=f"{info['Name'].get()}_{self.hsys}.xlsx",
+            filename=f"{info['Name'].get()}_{self.hsys}_"\
+                     f"{info['Hour'].get().zfill(2)}h"\
+                     f"{info['Minute'].get().zfill(2)}.xlsx",
             info=info,
             hsys=self.hsys
         )
