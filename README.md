@@ -18,11 +18,11 @@ The program has several requirements. But users don't need to install them manua
 
 **For Unix**
 
-    ./TkEnneagram.sh
+    ./TkEnneagram
 
 **For Windows**
 
-    TkEnneagram.bat
+    TkEnneagram.exe
     
 **Note:** For Windows, users also can run the program by double-clicking to the batch file.
 
