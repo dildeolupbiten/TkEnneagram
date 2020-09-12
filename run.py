@@ -3,8 +3,8 @@
 
 import os
 import sys
-import subprocess
 import platform
+import subprocess
 
 installed_packages = [
     p.decode().split("==")[0]
