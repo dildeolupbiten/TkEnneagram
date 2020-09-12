@@ -57,6 +57,5 @@ for package in packages:
     if package not in installed_packages:
         os.system(f"{sys.executable} -m pip install {package}")
            
-
 if __name__ == "__main__":
     import Scripts
