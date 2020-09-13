@@ -25,9 +25,9 @@ packages = [
 ]
 
 
-def call(path, n):
+def call(p, n):
     os.system(
-        f"{sys.executable} -m pip install {os.path.join(path, files[n])}"
+        f"{sys.executable} -m pip install {os.path.join(p, files[n])}"
     )
     
 
@@ -39,19 +39,19 @@ elif os.name == "nt":
         files = [i for i in os.listdir(path) if "pyswisseph" in i]
         if sys.version_info.minor == 6:
             if platform.architecture()[0] == "32bit":
-                call(path=path, n=0)
+                call(p=path, n=0)
             elif platform.architecture()[0] == "64bit":
-                call(path=path, n=1)
+                call(p=path, n=1)
         elif sys.version_info.minor == 7:
             if platform.architecture()[0] == "32bit":
-                call(path=path, n=2)
+                call(p=path, n=2)
             elif platform.architecture()[0] == "64bit":
-                call(path=path, n=3)
+                call(p=path, n=3)
         elif sys.version_info.minor == 8:
             if platform.architecture()[0] == "32bit":
-                call(path=path, n=4)
+                call(p=path, n=4)
             elif platform.architecture()[0] == "64bit":
-                call(path=path, n=5)
+                call(p=path, n=5)
 
 for package in packages:
     if package not in installed_packages:
