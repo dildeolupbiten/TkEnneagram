@@ -18,29 +18,31 @@ def create_image_files(path):
 
 
 def check_update(icons):
-    data = load(
-        request.urlopen(
-            url="https://api.github.com/repos/dildeolupbiten/"
-                "TkEnneagram/contents/Scripts?ref=master"
-        )
-    )
     update = False
-    for i in data:
-        file = request.urlopen(i["download_url"]).read().decode()
-        if i["name"] not in os.listdir("Scripts"):
-            update = True
-            with open(f"Scripts/{i['name']}", "w", encoding="utf-8") as f:
-                f.write(file)
-        else:
-            with open(f"Scripts/{i['name']}", "r", encoding="utf-8") as f:
-                if file != f.read():
-                    update = True
-                    with open(
-                            f"Scripts/{i['name']}",
-                            "w",
-                            encoding="utf-8"
-                    ) as g:
-                        g.write(file)
+    for d in ["Scripts", "JSON"]:
+        scripts = load(
+            request.urlopen(
+                url=f"https://api.github.com/repos/dildeolupbiten/"
+                    f"TkEnneagram/contents/{d}?ref=master"
+            )
+        )
+        for i in scripts:
+            file = request.urlopen(i["download_url"]).read().decode()
+            if i["name"] not in os.listdir(d):
+                update = True
+                with open(f"{d}/{i['name']}", "w", encoding="utf-8") as f:
+                    f.write(file)
+            else:
+                with open(f"{d}/{i['name']}", "r", encoding="utf-8") as f:
+                    if file != f.read():
+                        update = True
+                        with open(
+                                f"{d}/{i['name']}",
+                                "w",
+                                encoding="utf-8"
+                        ) as g:
+                            g.write(file)
+
     if update:
         MsgBox(
             title="Info",
