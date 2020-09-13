@@ -51,11 +51,11 @@ def check_update(icons):
             icons=icons
         )
         if os.name == "posix":
-            Popen(["python3", "TkAstroDb.py"])
+            Popen(["python3", "TkEnneagram.py"])
             import signal
             os.kill(os.getpid(), signal.SIGKILL)
         elif os.name == "nt":
-            Popen(["python", "TkAstroDb.py"])
+            Popen(["python", "TkEnneagram.py"])
             os.system(f"TASKKILL /F /PID {os.getpid()}")
     else:
         MsgBox(
