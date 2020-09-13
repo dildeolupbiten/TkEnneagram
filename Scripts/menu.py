@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .about import About
-from .modules import os, tk, Thread
+from .modules import os, tk
 from .utilities import check_update
 from .constants import HOUSE_SYSTEMS, PLANETS
 from .selection import SingleSelection, MultipleSelection
