@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .messagebox import MsgBox
-from .modules import os, load, request, Popen, ImageTk
+from .modules import os, load, request, error, Popen, ImageTk
 
 
 def create_image_files(path):
@@ -20,12 +20,21 @@ def create_image_files(path):
 def check_update(icons):
     update = False
     for d in ["Scripts", "JSON"]:
-        scripts = load(
-            request.urlopen(
-                url=f"https://api.github.com/repos/dildeolupbiten/"
-                    f"TkEnneagram/contents/{d}?ref=master"
+        try:
+            scripts = load(
+                request.urlopen(
+                    url=f"https://api.github.com/repos/dildeolupbiten/"
+                        f"TkEnneagram/contents/{d}?ref=master"
+                )
             )
-        )
+        except error.URLError:
+            MsgBox(
+                title="Info",
+                message="Couldn't connect to server.",
+                level="info",
+                icons=icons
+            )
+            return
         for i in scripts:
             file = request.urlopen(i["download_url"]).read().decode()
             if i["name"] not in os.listdir(d):
@@ -42,7 +51,6 @@ def check_update(icons):
                                 encoding="utf-8"
                         ) as g:
                             g.write(file)
-
     if update:
         MsgBox(
             title="Info",
