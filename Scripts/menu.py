@@ -42,8 +42,5 @@ class Menu(tk.Menu):
         )
         self.help.add_command(
             label="Update",
-            command=lambda: Thread(
-                target=lambda: check_update(icons=icons),
-                daemon=True
-            ).start()
+            command=lambda: check_update(icons=icons)
         )
