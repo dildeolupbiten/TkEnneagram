@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .about import About
-from .modules import os, tk
+from .modules import os, tk, Thread
 from .utilities import check_update
 from .constants import HOUSE_SYSTEMS, PLANETS
 from .selection import SingleSelection, MultipleSelection
@@ -42,5 +42,8 @@ class Menu(tk.Menu):
         )
         self.help.add_command(
             label="Update",
-            command=lambda: check_update(icons=icons)
+            command=lambda: Thread(
+                target=lambda: check_update(icons=icons)
+            ).start()
         )
+        
