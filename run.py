@@ -59,3 +59,4 @@ for package in packages:
            
 if __name__ == "__main__":
     import Scripts
+    Scripts.main()
