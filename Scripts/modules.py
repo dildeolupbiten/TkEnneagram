@@ -10,6 +10,9 @@ from PIL import ImageTk
 from tkinter import ttk
 from dateutil import tz
 from pytz import timezone
+from urllib import request
+from subprocess import Popen
+from webbrowser import open_new
 from xlsxwriter import Workbook
 from datetime import datetime as dt
 from geopy.geocoders import Nominatim

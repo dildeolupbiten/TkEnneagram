@@ -109,7 +109,17 @@ class Treeview(ttk.Treeview):
 
 
 class TreeviewToplevel(tk.Toplevel):
-    def __init__(self, values, info, hsys, icons, patterns, *args, **kwargs):
+    def __init__(
+            self,
+            values,
+            info,
+            hsys,
+            icons,
+            patterns,
+            file,
+            *args,
+            **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.title("Enneagram Scores")
         self.hsys = {v: k for k, v in HOUSE_SYSTEMS.items()}[hsys]
@@ -126,13 +136,27 @@ class TreeviewToplevel(tk.Toplevel):
         self.button = tk.Button(
             master=self,
             text="Export",
-            command=lambda: self.export(info, icons)
+            command=lambda: self.export(info, icons, file)
         )
         self.button.pack()
-        self.create_info_widgets(info, patterns)
+        self.create_info_widgets(info, patterns, file)
 
-    def create_info_widgets(self, info, patterns):
-        row = 0
+    def create_info_widgets(self, info, patterns, file):
+        title = tk.Label(
+            master=self.info_frame,
+            text="File",
+            font="Default 12 bold"
+        )
+        colon = tk.Label(
+            master=self.info_frame,
+            text=":",
+            font="Default 12 bold"
+        )
+        value = tk.Label(master=self.info_frame, text=file)
+        title.grid(row=0, column=0, sticky="w")
+        colon.grid(row=0, column=1, sticky="w")
+        value.grid(row=0, column=2, sticky="w")
+        row = 1
         r = 0
         for k, v in info.items():
             title = tk.Label(
@@ -147,14 +171,14 @@ class TreeviewToplevel(tk.Toplevel):
             )
             value = tk.Label(master=self.info_frame, text=v.get())
             if row % 2 == 0:
-                title.grid(row=row - r, column=0, sticky="w")
-                colon.grid(row=row - r, column=1, sticky="w")
-                value.grid(row=row - r, column=2, sticky="w")
-            else:
                 title.grid(row=row - r - 1, column=3, sticky="w")
                 colon.grid(row=row - r - 1, column=4, sticky="w")
                 value.grid(row=row - r - 1, column=5, sticky="w")
                 r += 1
+            else:
+                title.grid(row=row - r, column=0, sticky="w")
+                colon.grid(row=row - r, column=1, sticky="w")
+                value.grid(row=row - r, column=2, sticky="w")
             row += 1
         title = tk.Label(
             master=self.info_frame,
@@ -221,17 +245,19 @@ class TreeviewToplevel(tk.Toplevel):
                 column += 4
                 padx = 10
 
-    def export(self, info, icons):
+    def export(self, info, icons, file):
         Spreadsheet(
             data=[
                 self.treeview.item(i)["values"]
                 for i in self.treeview.get_children()
             ],
-            filename=f"{info['Name'].get()}_{self.hsys}_"\
-                     f"{info['Hour'].get().zfill(2)}h"\
+            filename=f"{file.replace('.json', '')}_"
+                     f"{info['Name'].get()}_{self.hsys}_"
+                     f"{info['Hour'].get().zfill(2)}h"
                      f"{info['Minute'].get().zfill(2)}.xlsx",
             info=info,
-            hsys=self.hsys
+            hsys=self.hsys,
+            file=file
         )
         MsgBox(
             title="Info",

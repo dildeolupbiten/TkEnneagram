@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from .modules import np
-from .scores import scores
 from .zodiac import Zodiac
+from .modules import np, load, ConfigParser
 
 
 class Enneagram:
@@ -32,6 +31,10 @@ class Enneagram:
         self.patterns = self.chart.patterns()
 
     def get_chart_scores(self, which):
+        config = ConfigParser()
+        config.read("defaults.ini")
+        with open(f"JSON/{config['SCORE']['selected']}", "r") as f:
+            scores = load(f)
         n1, n2 = 0, 0
         result = {}
         for p in self.patterns:

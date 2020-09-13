@@ -9,6 +9,7 @@ class Spreadsheet(Workbook):
             data,
             info,
             hsys,
+            file,
             *args,
             **kwargs
     ):
@@ -25,7 +26,7 @@ class Spreadsheet(Workbook):
         self.columns = ["Category"] + \
                        [f"Type-{i}" for i in range(1, 10)] + \
                        ["Total"]
-        self.write(data=data, info=info, hsys=hsys)
+        self.write(data=data, info=info, hsys=hsys, file=file)
         self.close()
 
     def format(
@@ -47,8 +48,18 @@ class Spreadsheet(Workbook):
             }
         )
 
-    def write(self, data, info, hsys):
-        row = 1
+    def write(self, data, info, hsys, file):
+        self.sheet.merge_range(
+            f"A1:B1",
+            "File",
+            self.format(bold=True)
+        )
+        self.sheet.merge_range(
+            f"C1:E1",
+            file,
+            self.format(bold=False, align="left")
+        )
+        row = 2
         r = 0
         for k, v in info.items():
             if v.get().isnumeric():
@@ -58,7 +69,7 @@ class Spreadsheet(Workbook):
                     value = float(v.get())
                 except ValueError:
                     value = v.get()
-            if row % 2 != 0:
+            if row % 2 == 0:
                 self.sheet.merge_range(
                     f"A{row - r}:B{row - r}",
                     k,

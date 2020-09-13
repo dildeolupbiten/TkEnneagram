@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .constants import PLANETS
-from .modules import os, dt, tz, swe, timezone, TimezoneFinder
+from .modules import os, dt, tz, swe, timezone, ConfigParser, TimezoneFinder
 from .conversions import convert_degree, reverse_convert_degree
 
 swe.set_ephe_path(os.path.join(os.getcwd(), "Eph"))
@@ -112,6 +112,9 @@ class Zodiac:
     def patterns(self):
         planet_positions = []
         house_positions = []
+        config = ConfigParser()
+        config.read("defaults.ini")
+        selected_planets = config["PLANETS"]["selected"].split(", ")
         for i in range(12):
             house = [
                 int(self.house_pos()[0][i][0]),
@@ -122,6 +125,8 @@ class Zodiac:
         hp = [j[-1] for j in house_positions]
         for key, value in PLANETS.items():
             if value["number"] is None:
+                continue
+            if key not in selected_planets:
                 continue
             planet = self.planet_pos(planet=value["number"])
             house = 0

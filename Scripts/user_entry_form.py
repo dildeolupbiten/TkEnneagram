@@ -2,6 +2,7 @@
 
 from .messagebox import MsgBox
 from .enneagram import Enneagram
+from .constants import HOUSE_SYSTEMS
 from .treeview import TreeviewToplevel
 from .modules import tk, ttk, ConfigParser, Nominatim
 
@@ -177,8 +178,9 @@ class UserEntryForm(tk.Frame):
 
     def calculate(self):
         config = ConfigParser()
-        config.read("default.ini")
-        hsys = config["HOUSE SYSTEM"]["hsys"]
+        config.read("defaults.ini")
+        file = config["SCORE"]["selected"]
+        hsys = HOUSE_SYSTEMS[config["HOUSE SYSTEM"]["selected"]]
         for k, v in self.entries.items():
             if not v.get():
                 if isinstance(v, ttk.Entry):
@@ -204,7 +206,8 @@ class UserEntryForm(tk.Frame):
                 info={k: v for k, v in self.entries.items() if k != "Place"},
                 hsys=hsys,
                 icons=self.icons,
-                patterns=user.patterns
+                patterns=user.patterns,
+                file=file
             )
         else:
             MsgBox(
