@@ -116,7 +116,7 @@ class TreeviewToplevel(tk.Toplevel):
             hsys,
             icons,
             patterns,
-            file,
+            algorithm,
             *args,
             **kwargs
     ):
@@ -136,26 +136,32 @@ class TreeviewToplevel(tk.Toplevel):
         self.button = tk.Button(
             master=self,
             text="Export",
-            command=lambda: self.export(info, icons, file)
+            command=lambda: self.export(info, icons, algorithm)
         )
         self.button.pack()
-        self.create_info_widgets(info, patterns, file)
+        self.create_info_widgets(info, patterns, algorithm)
 
-    def create_info_widgets(self, info, patterns, file):
-        title = tk.Label(
-            master=self.info_frame,
-            text="File",
-            font="Default 12 bold"
-        )
-        colon = tk.Label(
-            master=self.info_frame,
-            text=":",
-            font="Default 12 bold"
-        )
-        value = tk.Label(master=self.info_frame, text=file)
-        title.grid(row=0, column=0, sticky="w")
-        colon.grid(row=0, column=1, sticky="w")
-        value.grid(row=0, column=2, sticky="w")
+    def create_info_widgets(self, info, patterns, algorithm):
+        column = 0
+        for j, k in zip(
+                ["Algorithm", "House System"],
+                [algorithm, self.hsys]
+        ):
+            title = tk.Label(
+                master=self.info_frame,
+                text=j,
+                font="Default 12 bold"
+            )
+            colon = tk.Label(
+                master=self.info_frame,
+                text=":",
+                font="Default 12 bold"
+            )
+            value = tk.Label(master=self.info_frame, text=k)
+            title.grid(row=0, column=column + 0, sticky="w")
+            colon.grid(row=0, column=column + 1, sticky="w")
+            value.grid(row=0, column=column + 2, sticky="w")
+            column += 3
         row = 1
         r = 0
         for k, v in info.items():
@@ -169,7 +175,7 @@ class TreeviewToplevel(tk.Toplevel):
                 text=":",
                 font="Default 12 bold"
             )
-            value = tk.Label(master=self.info_frame, text=v.get())
+            value = tk.Label(master=self.info_frame, text=v)
             if row % 2 == 0:
                 title.grid(row=row - r - 1, column=3, sticky="w")
                 colon.grid(row=row - r - 1, column=4, sticky="w")
@@ -180,23 +186,6 @@ class TreeviewToplevel(tk.Toplevel):
                 colon.grid(row=row - r, column=1, sticky="w")
                 value.grid(row=row - r, column=2, sticky="w")
             row += 1
-        title = tk.Label(
-            master=self.info_frame,
-            text="House System",
-            font="Default 12 bold"
-        )
-        colon = tk.Label(
-            master=self.info_frame,
-            text=":",
-            font="Default 12 bold"
-        )
-        value = tk.Label(
-            master=self.info_frame,
-            text=self.hsys
-        )
-        title.grid(row=row - r - 1, column=3, sticky="w")
-        colon.grid(row=row - r - 1, column=4, sticky="w")
-        value.grid(row=row - r - 1, column=5, sticky="w")
         title = tk.Label(
             master=self.pattern_frame,
             text="Astrological Results",
@@ -245,19 +234,18 @@ class TreeviewToplevel(tk.Toplevel):
                 column += 4
                 padx = 10
 
-    def export(self, info, icons, file):
+    def export(self, info, icons, algorithm):
         Spreadsheet(
             data=[
                 self.treeview.item(i)["values"]
                 for i in self.treeview.get_children()
             ],
-            filename=f"{file.replace('.json', '')}_"
-                     f"{info['Name'].get()}_{self.hsys}_"
-                     f"{info['Hour'].get().zfill(2)}h"
-                     f"{info['Minute'].get().zfill(2)}.xlsx",
+            filename=f"{info['Name']}_{self.hsys}_"
+                     f"{info['Time'].replace(':', 'h')}_"
+                     f"{algorithm.replace('.json', '')}.xlsx",
             info=info,
             hsys=self.hsys,
-            file=file
+            algorithm=algorithm
         )
         MsgBox(
             title="Info",

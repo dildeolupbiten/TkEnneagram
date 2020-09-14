@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .modules import Workbook
+from .modules import dt, Workbook
 
 
 class Spreadsheet(Workbook):
@@ -9,7 +9,7 @@ class Spreadsheet(Workbook):
             data,
             info,
             hsys,
-            file,
+            algorithm,
             *args,
             **kwargs
     ):
@@ -26,7 +26,7 @@ class Spreadsheet(Workbook):
         self.columns = ["Category"] + \
                        [f"Type-{i}" for i in range(1, 10)] + \
                        ["Total"]
-        self.write(data=data, info=info, hsys=hsys, file=file)
+        self.write(data=data, info=info, hsys=hsys, algorithm=algorithm)
         self.close()
 
     def format(
@@ -48,27 +48,37 @@ class Spreadsheet(Workbook):
             }
         )
 
-    def write(self, data, info, hsys, file):
+    def write(self, data, info, hsys, algorithm):
         self.sheet.merge_range(
-            f"A1:B1",
-            "File",
+            "A1:B1",
+            "Algorithm",
             self.format(bold=True)
         )
         self.sheet.merge_range(
-            f"C1:E1",
-            file,
+            "C1:E1",
+            algorithm,
             self.format(bold=False, align="left")
+        )
+        self.sheet.merge_range(
+            "F1:G1",
+            "House System",
+            self.format(bold=True)
+        )
+        self.sheet.merge_range(
+            f"H1:J1",
+            hsys,
+            self.format(bold=False)
         )
         row = 2
         r = 0
         for k, v in info.items():
-            if v.get().isnumeric():
-                value = int(v.get())
+            if v.isnumeric():
+                value = int(v)
             else:
                 try:
-                    value = float(v.get())
+                    value = float(v)
                 except ValueError:
-                    value = v.get()
+                    value = v
             if row % 2 == 0:
                 self.sheet.merge_range(
                     f"A{row - r}:B{row - r}",
@@ -93,32 +103,22 @@ class Spreadsheet(Workbook):
                 )
                 r += 1
             row += 1
-        self.sheet.merge_range(
-            f"F{row - 1 - r}:G{row - 1 - r}",
-            "House System",
-            self.format(bold=True)
-        )
-        self.sheet.merge_range(
-            f"H{row - 1 - r}:J{row - 1 - r}",
-            hsys,
-            self.format(bold=False)
-        )
         n = 0
         for i in self.columns:
             if i == "Category":
                 self.sheet.merge_range(
-                    f"{self.cols[n]}7:{self.cols[n + 2]}7",
+                    f"{self.cols[n]}5:{self.cols[n + 2]}5",
                     i,
                     self.format(align="center", bold=True)
                 )
             else:
                 self.sheet.write(
-                    f"{self.cols[n + 2]}7",
+                    f"{self.cols[n + 2]}5",
                     i,
                     self.format(align="center", bold=True)
                 )
             n += 1
-        for index, cols in enumerate(data, 8):
+        for index, cols in enumerate(data, 6):
             n = 0
             for col in cols:
                 if "in" in col:
@@ -139,13 +139,13 @@ class Spreadsheet(Workbook):
                     )
                 else:
                     col = float(col)
-                    if index in [21, 37]:
+                    if index in [19, 35]:
                         self.sheet.write(
                             f"{self.cols[n + 2]}{index}",
                             col,
                             self.format(align="center", font_color="red")
                         )
-                    elif index == 38:
+                    elif index == 36:
                         self.sheet.write(
                             f"{self.cols[n + 2]}{index}",
                             col,

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from .zodiac import Zodiac
-from .modules import np, load, ConfigParser
+from .algorithm import auth
+from .modules import np, json, ConfigParser
 
 
 class Enneagram:
@@ -16,6 +17,7 @@ class Enneagram:
             lat,
             lon,
             hsys,
+            icons
     ):
         self.chart = Zodiac(
             year=year,
@@ -29,16 +31,35 @@ class Enneagram:
             hsys=hsys
         )
         self.patterns = self.chart.patterns()
+        self.scores = None
+        self.icons = icons
 
     def get_chart_scores(self, which):
         config = ConfigParser()
         config.read("defaults.ini")
-        with open(f"JSON/{config['SCORE']['selected']}", "r") as f:
-            scores = load(f)
+        file = config["ALGORITHM"]["selected"]
+        if file == "2012_Algorithm_Placidus.json":
+            if self.scores:
+                pass
+            else:
+                self.scores = auth(
+                    icons=self.icons, 
+                    config_key=config["AUTH"]["key"]
+                )
+                if self.scores:
+                    pass
+                else:
+                    return
+        else:
+            with open(
+                f"Algorithms/{config['ALGORITHM']['selected']}", 
+                "r"
+            ) as f:
+                self.scores = json.load(f)
         n1, n2 = 0, 0
         result = {}
         for p in self.patterns:
-            if p[n1] in scores[which]:
+            if p[n1] in self.scores[which]:
                 if which == "sign":
                     n2 = 1
                 elif which == "house":
@@ -46,11 +67,14 @@ class Enneagram:
                         n2 = 1
                     else:
                         n2 = -1
-                result[f"{p[n1]} in {p[n2]}"] = scores[which][p[n1]][p[n2]]
+                result[f"{p[n1]} in {p[n2]}"] = \
+                    self.scores[which][p[n1]][p[n2]]
         return result
 
     def get_total_score(self, which, name):
         result = self.get_chart_scores(which=which)
+        if not result:
+            return
         total = np.array([1 for _ in range(9)])
         _total = {name: {}}
         for pattern, score in result.items():
@@ -64,10 +88,14 @@ class Enneagram:
         return result
 
     def get_all_scores(self):
-        return {
-            k: self.get_total_score(which=k, name=v)
-            for k, v in {
-                "sign": "Dayscores",
-                "house": "Effect of Houses"
-            }.items()
-        }
+        result = {}
+        for k, v in {
+            "sign": "Dayscores",
+            "house": "Effect of Houses"
+        }.items():
+            value = self.get_total_score(which=k, name=v)
+            if not value:
+                return
+            else:
+                result[k] = value
+        return result

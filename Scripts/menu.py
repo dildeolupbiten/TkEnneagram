@@ -30,10 +30,10 @@ class Menu(tk.Menu):
             )
         )
         self.select.add_command(
-            label="Score",
+            label="Algorithm",
             command=lambda: SingleSelection(
-                title="Score",
-                catalogue=os.listdir("JSON")
+                title="Algorithm",
+                catalogue=os.listdir("Algorithms")
             )
         )
         self.help.add_command(

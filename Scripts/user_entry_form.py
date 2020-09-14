@@ -179,7 +179,7 @@ class UserEntryForm(tk.Frame):
     def calculate(self):
         config = ConfigParser()
         config.read("defaults.ini")
-        file = config["SCORE"]["selected"]
+        algorithm = config["ALGORITHM"]["selected"]
         hsys = HOUSE_SYSTEMS[config["HOUSE SYSTEM"]["selected"]]
         for k, v in self.entries.items():
             if not v.get():
@@ -199,15 +199,37 @@ class UserEntryForm(tk.Frame):
                 second=0,
                 lat=float(self.entries["Latitude"].get()),
                 lon=float(self.entries["Longitude"].get()),
-                hsys=hsys
+                hsys=hsys,
+                icons=self.icons
             )
+            info = {k: v for k, v in self.entries.items() if k != "Place"}
+            info = {
+                "Name": info["Name"].get(),
+                "Gender": info["Gender"].get(),
+                "Date": f"{info['Day'].get()}."
+                        f"{info['Month'].get()}."
+                        f"{info['Year'].get()}",
+                "Time": f"{info['Hour'].get().zfill(2)}:"
+                        f"{info['Minute'].get().zfill(2)}",
+                "Latitude": info["Latitude"].get(),
+                "Longitude": info["Longitude"].get()
+            }
+            scores = user.get_all_scores()
+            if not scores:
+                MsgBox(
+                    icons=self.icons,
+                    title="Warning",
+                    message="You entered wrong key!",
+                    level="warning"
+                )
+                return
             TreeviewToplevel(
-                values=user.get_all_scores(),
-                info={k: v for k, v in self.entries.items() if k != "Place"},
+                values=scores,
+                info=info,
                 hsys=hsys,
                 icons=self.icons,
                 patterns=user.patterns,
-                file=file
+                algorithm=algorithm
             )
         else:
             MsgBox(

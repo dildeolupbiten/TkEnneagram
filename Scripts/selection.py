@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from .constants import PLANETS
 from .modules import os, tk, ConfigParser
 
 
@@ -13,6 +14,24 @@ class Selection(tk.Toplevel):
             self.config.read("defaults.ini")
             if title.upper() in self.config:
                 self.selected = self.config[title.upper()]["selected"]
+            if "AUTH" not in self.config:
+                self.config["AUTH"] = {"key": "None"}
+        else:
+            with open("defaults.ini", "w") as f:
+                self.config["HOUSE SYSTEM"] = {"selected": "Placidus"}
+                self.config["PLANETS"] = {
+                    "selected": 
+                    ", ".join(
+                            planet 
+                            for planet in PLANETS 
+                            if planet not in ["Ascendant", "Midheaven"]
+                        )
+                    }
+                self.config["ALGORITHM"] = {
+                    "selected": "2010_Algorithm_Placidus.json"
+                }
+                self.config["AUTH"] = {"key": "None"}
+                self.config.write(f)          
         self.catalogue = catalogue
         self.resizable(width=False, height=False)
         self.topframe = tk.Frame(master=self)
