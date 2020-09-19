@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from .constants import PLANETS
+from .utilities import convert_degree, reverse_convert_degree
 from .modules import os, dt, tz, swe, timezone, ConfigParser, TimezoneFinder
-from .conversions import convert_degree, reverse_convert_degree
 
 swe.set_ephe_path(os.path.join(os.getcwd(), "Eph"))
 
@@ -10,15 +10,16 @@ swe.set_ephe_path(os.path.join(os.getcwd(), "Eph"))
 class Zodiac:
     def __init__(
             self,
-            year,
-            month,
-            day,
-            hour,
-            minute,
-            second,
-            lat,
-            lon,
-            hsys,
+            year=0,
+            month=0,
+            day=0,
+            hour=0,
+            minute=0,
+            second=0,
+            jd=.0,
+            lat=.0,
+            lon=.0,
+            hsys="",
     ):
         self.local_year = year
         self.local_month = month
@@ -29,13 +30,16 @@ class Zodiac:
         self.lat = lat
         self.lon = lon
         self.hsys = hsys
-        self.utc_year = self.local_to_utc()["year"]
-        self.utc_month = self.local_to_utc()["month"]
-        self.utc_day = self.local_to_utc()["day"]
-        self.utc_hour = self.local_to_utc()["hour"]
-        self.utc_minute = self.local_to_utc()["minute"]
-        self.utc_second = self.local_to_utc()["second"]
-        self.jd = self.julday()
+        if not jd:
+            self.utc_year = self.local_to_utc()["year"]
+            self.utc_month = self.local_to_utc()["month"]
+            self.utc_day = self.local_to_utc()["day"]
+            self.utc_hour = self.local_to_utc()["hour"]
+            self.utc_minute = self.local_to_utc()["minute"]
+            self.utc_second = self.local_to_utc()["second"]
+            self.jd = self.julday()
+        else:
+            self.jd = jd
 
     def julday(self):
         t_given = dt.strptime(

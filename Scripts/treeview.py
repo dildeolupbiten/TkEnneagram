@@ -3,29 +3,45 @@
 from .messagebox import MsgBox
 from .modules import np, tk, ttk
 from .spreadsheet import Spreadsheet
-from .conversions import dd_to_dms, convert_degree
+from .utilities import dd_to_dms, convert_degree
 from .constants import HOUSE_SYSTEMS, SIGNS, PLANETS
 
 
 class Treeview(ttk.Treeview):
-    def __init__(self, values, *args, **kwargs):
+    def __init__(
+            self,
+            columns,
+            values=None,
+            *args,
+            **kwargs
+    ):
         super().__init__(*args, **kwargs)
-        self.style = ttk.Style()
-        self.style.map(
-            "Treeview",
-            background=[("selected", "#00b4a7")],
-            foreground=[("selected", "#000000")]
-        )
-        self.style.configure("Treeview.Heading", background="#ffffff")
-        self.style.configure("Treeeview.Cell", fieldbackground="red")
-        self.style.map(
-            "Treeview.Heading",
-            background=[("active", "#00b4a7")],
-            foreground=[("active", "#000000")]
-        )
-        self.columns = ["Category"] + \
-                       [f"Type-{i}" for i in range(1, 10)] + \
-                       ["Total"]
+        self.columns = columns
+        if values:
+            self.style = ttk.Style()
+            self.style.map(
+                "Treeview",
+                background=[("selected", "#00b4a7")],
+                foreground=[("selected", "#000000")]
+            )
+            self.style.configure("Treeview.Heading", background="#ffffff")
+            self.style.configure("Treeeview.Cell", fieldbackground="red")
+            self.style.map(
+                "Treeview.Heading",
+                background=[("active", "#00b4a7")],
+                foreground=[("active", "#000000")]
+            )
+        else:
+            self.x_scrollbar = tk.Scrollbar(
+                master=self.master,
+                orient="horizontal"
+            )
+            self.configure(
+                xscrollcommand=self.x_scrollbar.set,
+                height=5
+            )
+            self.x_scrollbar.configure(command=self.xview)
+            self.x_scrollbar.pack(side="bottom", fill="x")
         self.y_scrollbar = tk.Scrollbar(
             master=self.master,
             orient="vertical"
@@ -42,13 +58,17 @@ class Treeview(ttk.Treeview):
             height=20,
             selectmode="extended"
         )
-        self.pack(side="left", fill="both", expand=True)
+        self.pack(side="left", expand=True, fill="both")
         for index, column in enumerate(self.columns):
-            if index == 0:
-                width = 200
-                anchor = "w"
+            if values:
+                if index == 0:
+                    width = 200
+                    anchor = "w"
+                else:
+                    width = 75
+                    anchor = "center"
             else:
-                width = 75
+                width = 125
                 anchor = "center"
             self.column(
                 column=f"#{index + 1}",
@@ -56,7 +76,7 @@ class Treeview(ttk.Treeview):
                 width=width,
                 anchor=anchor,
             )
-            self._heading(col=index, text=column)
+            self._heading(col=index, text=column, values=values)
         self.bind(
             sequence="<Control-a>",
             func=lambda event: self.select_all()
@@ -65,10 +85,34 @@ class Treeview(ttk.Treeview):
             sequence="<Control-A>",
             func=lambda event: self.select_all()
         )
-        self.insert_values(values)
+        if values:
+            self.insert_values(values)
 
-    def _heading(self, col, text):
-        self.heading(column=f"#{col + 1}", text=text)
+    def _heading(self, col, text, values):
+        if values:
+            self.heading(column=f"#{col + 1}", text=text)
+        else:
+            self.heading(
+                column=f"#{col + 1}",
+                text=text,
+                command=lambda: self.sort(col=col, reverse=False)
+            )
+
+    def sort(self, col: int, reverse: bool):
+        column = [
+            (self.set(k, col), k)
+            for k in self.get_children("")
+        ]
+        try:
+            column.sort(key=lambda t: int(t[0]), reverse=reverse)
+        except ValueError:
+            column.sort(reverse=reverse)
+        for index, (val, k) in enumerate(column):
+            self.move(k, "", index)
+        self.heading(
+            column=col,
+            command=lambda: self.sort(col=col, reverse=not reverse)
+        )
 
     def select_all(self):
         for child in self.get_children():
@@ -132,7 +176,14 @@ class TreeviewToplevel(tk.Toplevel):
         self.pattern_frame.pack(fill="both", side="left", padx=100)
         self.treeview_frame = tk.Frame(master=self)
         self.treeview_frame.pack(fill="both")
-        self.treeview = Treeview(master=self.treeview_frame, values=values)
+        self.columns = ["Category"] + \
+                       [f"Type-{i}" for i in range(1, 10)] + \
+                       ["Total"]
+        self.treeview = Treeview(
+            master=self.treeview_frame,
+            values=values,
+            columns=self.columns,
+        )
         self.button = tk.Button(
             master=self,
             text="Export",

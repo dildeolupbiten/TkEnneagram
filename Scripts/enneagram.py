@@ -8,16 +8,17 @@ from .modules import np, json, ConfigParser
 class Enneagram:
     def __init__(
             self,
-            year,
-            month,
-            day,
-            hour,
-            minute,
-            second,
-            lat,
-            lon,
-            hsys,
-            icons
+            year=0,
+            month=0,
+            day=0,
+            hour=0,
+            minute=0,
+            second=0,
+            jd=.0,
+            lat=.0,
+            lon=.0,
+            hsys="",
+            icons=None
     ):
         self.chart = Zodiac(
             year=year,
@@ -26,6 +27,7 @@ class Enneagram:
             hour=hour,
             minute=minute,
             second=second,
+            jd=jd,
             lat=lat,
             lon=lon,
             hsys=hsys

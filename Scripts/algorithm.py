@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from .decrypt import decrypt
+from .utilities import decrypt
 from .messagebox import MsgBox
-from .selection import SingleSelection
-from .modules import os, tk, ttk, json, ConfigParser
+from .modules import tk, ttk, json, ConfigParser
+
+result = None
 
 
 def try_access(toplevel, key, icons):
@@ -20,7 +21,7 @@ def try_access(toplevel, key, icons):
         return
     try:
         result = json.loads(
-            decrypt.decrypt(
+            decrypt(
                 file="Algorithms/2012_Algorithm_Placidus.json", 
                 password=int(key)))
         config = ConfigParser()
@@ -36,7 +37,6 @@ def try_access(toplevel, key, icons):
 
 def auth_interface(icons, config_key):
     global result
-    result = None
     if config_key != "None":
         try_access(
             toplevel=None,
