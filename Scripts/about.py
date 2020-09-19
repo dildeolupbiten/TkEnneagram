@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .modules import dt, tk, open_new
+from .modules import tk, open_new
 
 
 class About(tk.Toplevel):
@@ -10,7 +10,7 @@ class About(tk.Toplevel):
         self.version = "1.0.2"
         self.name = "TkEnneagram"
         self.date_built = "10.09.2020"
-        self.date_updated = dt.now().strftime("%d.%m.%Y")
+        self.date_updated = "20.09.2020"
         self.thanks = "Sjoerd Visser"
         self.developed_by = "Tanberk Celalettin Kutlu"
         self.contact = "tckutlu@gmail.com"
