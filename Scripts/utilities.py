@@ -19,7 +19,7 @@ def create_image_files(path):
 
 def check_update(icons):
     update = False
-    for d in ["Scripts", "JSON"]:
+    for d in ["Scripts", "Algorithms"]:
         try:
             scripts = json.load(
                 urlopen(
