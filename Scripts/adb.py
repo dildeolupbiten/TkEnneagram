@@ -785,8 +785,10 @@ class ControlPanel(tk.Toplevel):
             pass
         else:
             for i in selected:
+                for j in self.displayed_results:
+                    if j[0] == self.treeview.item(i)["values"][0]:
+                        self.displayed_results.remove(j)
                 self.treeview.delete(i)
-                self.displayed_results.remove(i)
             self.info_var.set(len(self.displayed_results))
 
     def button_3_open_url(self):
