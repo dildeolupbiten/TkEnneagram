@@ -181,6 +181,31 @@ class ADB(tk.Toplevel):
             [i for i in self.category_dict.values() if i is not None]
         )
 
+    def pbar(self, r, s, n, pbar, pstring, pframe, plabel):
+        if r != s:
+            try:
+                pbar["value"] = r
+                pbar["maximum"] = s
+                pstring.set(
+                    "{} %, {} minutes remaining.".format(
+                        int(100 * r / s),
+                        round(
+                            (
+                                int(s / (r / (time.time() - n)))
+                                - int(time.time() - n)
+                            ) / 60
+                        )
+                    )
+                )
+            except tk.TclError:
+                return
+        else:
+            pframe.destroy()
+            pbar.destroy()
+            plabel.destroy()
+            self.open_button.pack()
+            msgbox_info(self, "Calculation completed.\n")
+
     def calculate(self):
         self.open_button.pack_forget()
         msgbox_info(self, "Calculation started.\n")
@@ -216,6 +241,15 @@ class ADB(tk.Toplevel):
                         f"\tRecord: {record}\n".expandtabs(4)
                 )
                 received += 1
+                self.pbar(
+                    r=received,
+                    s=size,
+                    n=now,
+                    pbar=pbar,
+                    pstring=pstring,
+                    pframe=pframe,
+                    plabel=plabel
+                )
                 continue
             try:
                 score = result.get_all_scores()
@@ -225,6 +259,15 @@ class ADB(tk.Toplevel):
                         f"\tRecord: {record}\n".expandtabs(4)
                 )
                 received += 1
+                self.pbar(
+                    r=received,
+                    s=size,
+                    n=now,
+                    pbar=pbar,
+                    pstring=pstring,
+                    pframe=pframe,
+                    plabel=plabel
+                )
                 continue
             dayscores = np.array(
                 [v for k, v in score["sign"]["Dayscores"].items()]
@@ -244,24 +287,15 @@ class ADB(tk.Toplevel):
             enneagram_type = f"Type-{enneagram_type + 1}"
             record.extend([enneagram_type, enneagram_wing])
             received += 1
-            if received != size:
-                try:
-                    pbar["value"] = received
-                    pbar["maximum"] = size
-                    pstring.set("{} %, {} minutes remaining.".format(
-                        int(100 * received / size),
-                        round(
-                            (int(size /
-                                 (received / (time.time() - now)))
-                             - int(time.time() - now)) / 60)))
-                except tk.TclError:
-                    return
-            else:
-                pframe.destroy()
-                pbar.destroy()
-                plabel.destroy()
-                self.open_button.pack()
-                msgbox_info(self, "Calculation completed.\n")
+            self.pbar(
+                r=received,
+                s=size,
+                n=now,
+                pbar=pbar,
+                pstring=pstring,
+                pframe=pframe,
+                plabel=plabel
+            )
 
 
 class ControlPanel(tk.Toplevel):
