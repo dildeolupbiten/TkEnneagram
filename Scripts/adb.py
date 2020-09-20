@@ -159,15 +159,17 @@ class ADB(tk.Toplevel):
                 except IndexError:
                     break
             try:
-                msgbox_info(self, "Parsing completed.\n")
+                msgbox_info(self, "Completed parsing.\n")
                 msgbox_info(self, f"{ignored} records are ignored.\n")
                 msgbox_info(self, f"{len(xml_database)} records are inserted.\n")
                 self.database.extend(xml_database)
                 msgbox_info(self, f"{len(self.database)} records are available.\n")
             except tk.TclError:
                 return
-        self.group_categories()
         self.calculate()
+        msgbox_info(self, f"Started grouping categories.\n")
+        self.group_categories()
+        msgbox_info(self, f"Completed grouping categories.\n")
 
     def group_categories(self):
         for record in self.database:
@@ -204,11 +206,11 @@ class ADB(tk.Toplevel):
             pbar.destroy()
             plabel.destroy()
             self.open_button.pack()
-            msgbox_info(self, "Calculation completed.\n")
+            msgbox_info(self, "Completed calculating.\n")
 
     def calculate(self):
         self.open_button.pack_forget()
-        msgbox_info(self, "Calculation started.\n")
+        msgbox_info(self, "Started calculating.\n")
         size = len(self.database)
         received = 0
         now = time.time()
