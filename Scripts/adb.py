@@ -174,7 +174,7 @@ class ADB(tk.Toplevel):
     def group_categories(self):
         self.all_categories = {}
         for record in self.database:
-            for category in record[-1]:
+            for category in record[-3]:
                 if (category[0], category[1]) not in self.all_categories:
                     if category[1] is None:
                         pass
