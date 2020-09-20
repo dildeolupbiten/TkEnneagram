@@ -3,7 +3,7 @@
 from .constants import SIGNS
 from .messagebox import MsgBox
 from .modules import (
-    dt, os, json, urlopen, URLError, Popen, ImageTk, pickle, logging
+    dt, os, json, urlopen, URLError, Popen, ImageTk, pickle
 )
 
 
@@ -166,11 +166,4 @@ def decrypt(file, password):
     return "".join(
         chr(item - password - index)
         for index, item in enumerate(data)
-    )
-
-
-def excepthook(exc_type, exc_value, exc_traceback):
-    logging.error(
-        msg="Error:",
-        exc_info=(exc_type, exc_value, exc_traceback)
     )

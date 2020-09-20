@@ -6,14 +6,12 @@ from .constants import HOUSE_SYSTEMS
 from .treeview import Treeview, TreeviewToplevel
 from .utilities import (
     msgbox_info, convert_coordinates,
-    tbutton_command, check_all_command, excepthook
+    tbutton_command, check_all_command
 )
 from .modules import (
-    os, dt, tk, np, ET, sys, ttk, time,
+    os, dt, tk, np, ET, swe, ttk, time,
     Thread, open_new, logging, ConfigParser
 )
-
-sys.excepthook = excepthook
 
 logging.basicConfig(
     filename="log.log",
@@ -204,12 +202,19 @@ class ADB(tk.Toplevel):
             jd = float(record[6])
             lat = convert_coordinates(record[7])
             lon = convert_coordinates(record[8])
-            result = Enneagram(
-                jd=jd,
-                lat=lat,
-                lon=lon,
-                hsys="P"
-            )
+            try:
+                result = Enneagram(
+                    jd=jd,
+                    lat=lat,
+                    lon=lon,
+                    hsys="P"
+                )
+            except swe.Error:
+                logging.error(
+                    msg=f"Can't calculate the record:\n"
+                        f"\tRecord: {record}".expandtabs(4)
+                )
+                continue
             score = result.get_all_scores()
             dayscores = np.array(
                 [v for k, v in score["sign"]["Dayscores"].items()]
