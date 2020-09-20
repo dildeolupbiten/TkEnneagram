@@ -19,7 +19,7 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt="%d.%m.%Y %H:%M:%S"
 )
-logging.info(msg="Season Started.")
+logging.info(msg="Season Started.\n")
 
 
 class ADB(tk.Toplevel):
@@ -215,6 +215,7 @@ class ADB(tk.Toplevel):
                     msg=f"Can't calculate the astrological results:\n"
                         f"\tRecord: {record}".expandtabs(4)
                 )
+                received += 1
                 continue
             try:
                 score = result.get_all_scores()
@@ -223,6 +224,7 @@ class ADB(tk.Toplevel):
                     msg=f"Can't calculate the score:\n"
                         f"\tRecord: {record}".expandtabs(4)
                 )
+                received += 1
                 continue
             dayscores = np.array(
                 [v for k, v in score["sign"]["Dayscores"].items()]
