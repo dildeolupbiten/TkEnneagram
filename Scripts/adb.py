@@ -75,6 +75,8 @@ class ADB(tk.Toplevel):
         )
 
     def choose_operation(self):
+        if not os.path.exists("Adb"):
+            os.makedirs("Adb")
         if not os.listdir("Adb"):
             Thread(target=self.load_adb).start()
         else:
