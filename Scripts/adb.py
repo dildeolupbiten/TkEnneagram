@@ -161,9 +161,15 @@ class ADB(tk.Toplevel):
             try:
                 msgbox_info(self, "Completed parsing.\n")
                 msgbox_info(self, f"{ignored} records are ignored.\n")
-                msgbox_info(self, f"{len(xml_database)} records are inserted.\n")
+                msgbox_info(
+                    self,
+                    f"{len(xml_database)} records are inserted.\n"
+                )
                 self.database.extend(xml_database)
-                msgbox_info(self, f"{len(self.database)} records are available.\n")
+                msgbox_info(
+                    self,
+                    f"{len(self.database)} records are available.\n"
+                )
             except tk.TclError:
                 return
         self.calculate()
@@ -402,7 +408,10 @@ class ControlPanel(tk.Toplevel):
             command=self.display_results
         )
         self.display_button.grid(row=10, column=0, columnspan=4, pady=10)
-        self.total_msgbox_info = tk.Label(master=self.bottomframe, text="Total = ")
+        self.total_msgbox_info = tk.Label(
+            master=self.bottomframe,
+            text="Total = "
+        )
         self.total_msgbox_info.grid(row=0, column=0)
         self.msgbox_info = tk.Label(
             master=self.bottomframe,
@@ -434,7 +443,9 @@ class ControlPanel(tk.Toplevel):
                 self.found_record.configure(text=f"Record Found = {count}")
                 self.add_button.grid(row=1, column=1, padx=5, pady=5)
                 self.add_button.configure(
-                    command=lambda: self.add_command(record=self.database[index])
+                    command=lambda: self.add_command(
+                        record=self.database[index]
+                    )
                 )
                 save_record += self.database[index][1]
         if save_record != self.search_entry.get() or \
