@@ -224,6 +224,7 @@ class ADB(tk.Toplevel):
         pframe.pack()
         pbar.pack(side="left")
         plabel.pack(side="left")
+        will_be_removed = []
         for record in self.database:
             jd = float(record[6])
             lat = convert_coordinates(record[7])
@@ -241,6 +242,7 @@ class ADB(tk.Toplevel):
                         f"\tRecord: {record}\n".expandtabs(4)
                 )
                 received += 1
+                will_be_removed.append(record)
                 self.pbar(
                     r=received,
                     s=size,
@@ -259,6 +261,7 @@ class ADB(tk.Toplevel):
                         f"\tRecord: {record}\n".expandtabs(4)
                 )
                 received += 1
+                will_be_removed.append(record)
                 self.pbar(
                     r=received,
                     s=size,
@@ -296,6 +299,8 @@ class ADB(tk.Toplevel):
                 pframe=pframe,
                 plabel=plabel
             )
+        for i in will_be_removed:
+            self.database.remove(i)
 
 
 class ControlPanel(tk.Toplevel):
