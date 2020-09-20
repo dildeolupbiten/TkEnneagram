@@ -718,7 +718,10 @@ class ControlPanel(tk.Toplevel):
         if not selected:
             pass
         else:
-            values = self.treeview.item(selected)["values"]
+            try:
+                values = self.treeview.item(selected)["values"]
+            except tk.TclError:
+                return
             config = ConfigParser()
             config.read("defaults.ini")
             algorithm = config["ALGORITHM"]["selected"]
@@ -784,5 +787,8 @@ class ControlPanel(tk.Toplevel):
         if not selected:
             pass
         else:
-            values = self.treeview.item(selected)["values"]
+            try:
+                values = self.treeview.item(selected)["values"]
+            except tk.TclError:
+                return
             open_new(values[11])
