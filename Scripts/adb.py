@@ -93,6 +93,7 @@ class ADB(tk.Toplevel):
             )
             config = ConfigParser()
             config.read("defaults.ini")
+            print(config["ADB"]["selected"])
             filename = config["ADB"]["selected"]
             category_file = "categories_of_" + filename
             self.load_json(
@@ -206,7 +207,13 @@ class ADB(tk.Toplevel):
         self.group_categories()
         msgbox_info(self, f"Completed grouping categories.\n")
         msgbox_info(self, f"Started extracting the modified database.\n")
-        self.extract_database(filename="&".join(filename) + ".json")
+        config = ConfigParser()
+        config.read("defaults.ini")
+        filename = "&".join(filename) + "_" + \
+                   config["ALGORITHM"]["selected"].replace(
+                       ".json", ""
+                   ) + ".json"
+        self.extract_database(filename=filename)
         msgbox_info(self, f"Completed extracting the modified database.\n")
 
     def group_categories(self):
@@ -223,6 +230,8 @@ class ADB(tk.Toplevel):
         )
 
     def load_json(self, filename, category_file):
+        if filename == "./Adb/None":
+            return
         msgbox_info(self, f"Started loading the modified database.\n")
         with open(filename, encoding="utf-8") as file:
             self.database = json.load(file)

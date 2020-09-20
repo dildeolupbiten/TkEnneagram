@@ -48,6 +48,7 @@ class Selection(tk.Toplevel):
             command=lambda: self.apply(title=title.upper())
         )
         self.button.pack()
+        self.wm_protocol("WM_DELETE_WINDOW", lambda: None)
 
     def apply(self, title):
         pass
@@ -61,7 +62,7 @@ class SingleSelection(Selection):
             *args,
             **kwargs
         )
-        self.geometry("300x200")
+        self.geometry("500x400")
         for i, j in enumerate(self.catalogue):
             var = tk.StringVar()
             if j == self.selected:
