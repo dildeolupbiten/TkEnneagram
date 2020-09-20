@@ -16,6 +16,8 @@ class Selection(tk.Toplevel):
                 self.selected = self.config[title.upper()]["selected"]
             if "AUTH" not in self.config:
                 self.config["AUTH"] = {"key": "None"}
+            if "ADB" not in self.config:
+                self.config["ADB"] = {"selected": "None"}
         else:
             with open("defaults.ini", "w") as f:
                 self.config["HOUSE SYSTEM"] = {"selected": "Placidus"}
@@ -31,6 +33,7 @@ class Selection(tk.Toplevel):
                     "selected": "2010_Algorithm_Placidus.json"
                 }
                 self.config["AUTH"] = {"key": "None"}
+                self.config["ADB"] = {"selected": "None"}
                 self.config.write(f)          
         self.catalogue = catalogue
         self.resizable(width=False, height=False)
@@ -73,6 +76,7 @@ class SingleSelection(Selection):
             checkbutton.grid(row=i, column=0, sticky="w")
             self.checkbuttons[j] = [checkbutton, var]
             self.configure_checkbuttons(option=j)
+        self.wait_window()
 
     def apply(self, title):
         for i in self.catalogue:

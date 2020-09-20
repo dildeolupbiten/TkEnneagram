@@ -3,13 +3,14 @@
 from .messagebox import MsgBox
 from .enneagram import Enneagram
 from .constants import HOUSE_SYSTEMS
+from .selection import SingleSelection
 from .treeview import Treeview, TreeviewToplevel
 from .utilities import (
     msgbox_info, convert_coordinates,
     tbutton_command, check_all_command
 )
 from .modules import (
-    os, dt, tk, np, ET, swe, ttk, time,
+    os, dt, tk, np, ET, swe, ttk, json, time,
     Thread, open_new, logging, ConfigParser
 )
 
@@ -40,7 +41,7 @@ class ADB(tk.Toplevel):
             master=self.topframe,
             text="Load",
             width=10,
-            command=lambda: Thread(target=self.load).start()
+            command=self.choose_operation
         )
         self.load_button.grid(row=0, column=0)
         self.logging_text = tk.Text(
@@ -73,7 +74,23 @@ class ADB(tk.Toplevel):
             )
         )
 
-    def load(self):
+    def choose_operation(self):
+        if not os.listdir("Adb"):
+            Thread(target=self.load_adb).start()
+        else:
+            SingleSelection(
+                title="Adb",
+                catalogue=[
+                    i for i in os.listdir("Adb")
+                    if i.endswith(".json")
+                ]
+            )
+            config = ConfigParser()
+            config.read("defaults.ini")
+            filename = config["ADB"]["selected"]
+            self.load_json(filename=os.path.join(".", "Adb", filename))
+
+    def load_adb(self):
         self.database = []
         self.category_dict = {}
         self.logging_text["state"] = "normal"
@@ -97,7 +114,9 @@ class ADB(tk.Toplevel):
             )
             return
         xml_files = {key: xml_files[key] for key in sorted(xml_files)}
+        filename = []
         for xml_file in xml_files.values():
+            filename.append(xml_file.replace(".xml", ""))
             xml_database = []
             ignored = 0
             msgbox_info(self, f"Parsing {xml_file} file...\n")
@@ -176,6 +195,9 @@ class ADB(tk.Toplevel):
         msgbox_info(self, f"Started grouping categories.\n")
         self.group_categories()
         msgbox_info(self, f"Completed grouping categories.\n")
+        msgbox_info(self, f"Started extracting the modified database.\n")
+        self.extract_database(filename="&".join(filename) + ".json")
+        msgbox_info(self, f"Completed extracting the modified database.\n")
 
     def group_categories(self):
         self.all_categories = {}
@@ -189,6 +211,21 @@ class ADB(tk.Toplevel):
         self.category_names = sorted(
             [i for i in self.category_dict.values() if i is not None]
         )
+
+    def load_json(self, filename):
+        msgbox_info(self, f"Started loading the modified database.\n")
+        with open(filename, encoding="utf-8") as file:
+            self.database = json.load(file)
+        msgbox_info(self, f"Completed loading the modified database.\n")
+        msgbox_info(self, f"Started grouping categories.\n")
+        self.group_categories()
+        msgbox_info(self, f"Completed grouping categories.\n")
+        self.open_button.pack()
+
+    def extract_database(self, filename):
+        path = os.path.join(".", "Adb", filename)
+        with open(path, "w", encoding="utf-8") as file:
+            json.dump(self.database, file, ensure_ascii=False, indent=4)
 
     def pbar(self, r, s, n, pbar, pstring, pframe, plabel):
         if r != s:
