@@ -211,11 +211,18 @@ class ADB(tk.Toplevel):
                 )
             except swe.Error:
                 logging.error(
-                    msg=f"Can't calculate the record:\n"
+                    msg=f"Can't calculate the astrological results:\n"
                         f"\tRecord: {record}".expandtabs(4)
                 )
                 continue
-            score = result.get_all_scores()
+            try:
+                score = result.get_all_scores()
+            except KeyError:
+                logging.error(
+                    msg=f"Can't calculate the score:\n"
+                        f"\tRecord: {record}".expandtabs(4)
+                )
+                continue
             dayscores = np.array(
                 [v for k, v in score["sign"]["Dayscores"].items()]
             )
