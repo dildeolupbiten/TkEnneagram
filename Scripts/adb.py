@@ -333,9 +333,10 @@ class ControlPanel(tk.Toplevel):
         self.selected_categories = []
         self.selected_ratings = []
         self.checkbuttons = {}
-        self.menu = None
-        self.msgbox_info_var = tk.StringVar()
-        self.msgbox_info_var.set("0")
+        self.treeview_menu = None
+        self.entry_menu = None
+        self.info_var = tk.StringVar()
+        self.info_var.set("0")
         self.topframe = tk.Frame(master=self)
         self.topframe.pack()
         self.midframe = tk.Frame(master=self)
@@ -354,11 +355,17 @@ class ControlPanel(tk.Toplevel):
         )
         self.treeview.bind(
             sequence="<Button-1>",
-            func=lambda event: self.destroy_menu()
+            func=lambda event: self.destroy_menu(self.treeview_menu)
         )
         self.treeview.bind(
             sequence="<Button-3>",
             func=lambda event: self.button_3_on_treeview(event=event)
+        )
+        self.treeview.bind(
+            sequence="<Control-a>",
+            func=lambda event: self.treeview.selection_set(
+                self.treeview.get_children()
+            )
         )
         self.entry_button_frame = tk.Frame(master=self.topframe)
         self.entry_button_frame.grid(row=0, column=0)
@@ -373,6 +380,17 @@ class ControlPanel(tk.Toplevel):
         self.search_entry.bind(
             sequence="<KeyRelease>",
             func=lambda event: self.search_func()
+        )
+        self.search_entry.bind(
+            sequence="<Button-1>",
+            func=lambda event: self.destroy_menu(self.entry_menu))
+        self.search_entry.bind(
+            sequence="<Button-3>",
+            func=self.button_3_on_entry
+        )
+        self.search_entry.bind(
+            sequence="<Control-KeyRelease-a>",
+            func=lambda event: self.search_entry.select_range("0", "end")
         )
         self.found_record = tk.Label(master=self.entry_button_frame, text="")
         self.found_record.grid(row=1, column=0, padx=5, pady=5)
@@ -415,7 +433,7 @@ class ControlPanel(tk.Toplevel):
         self.total_msgbox_info.grid(row=0, column=0)
         self.msgbox_info = tk.Label(
             master=self.bottomframe,
-            textvariable=self.msgbox_info_var
+            textvariable=self.info_var
         )
         self.msgbox_info.grid(row=0, column=1)
         self.resizable(width=False, height=False)
@@ -427,7 +445,7 @@ class ControlPanel(tk.Toplevel):
             num = len(self.treeview.get_children()) + 1
             self.treeview.insert("", num, values=[col for col in record])
             self.displayed_results.append(record)
-            self.msgbox_info_var.set(len(self.displayed_results))
+            self.info_var.set(len(self.displayed_results))
         self.add_button.grid_forget()
         self.found_record.configure(text="")
         self.search_entry.delete("0", "end")
@@ -517,7 +535,7 @@ class ControlPanel(tk.Toplevel):
     def insert_to_treeview(self, item):
         num = len(self.treeview.get_children()) + 1
         self.treeview.insert("", num, values=[col for col in item])
-        self.msgbox_info_var.set(len(self.displayed_results))
+        self.info_var.set(len(self.displayed_results))
         self.displayed_results.append(item)
         self.update()
 
@@ -568,7 +586,7 @@ class ControlPanel(tk.Toplevel):
                                     human.get() == "1"
                             ):
                                 pass
-        self.msgbox_info_var.set(len(self.displayed_results))
+        self.info_var.set(len(self.displayed_results))
         self.update()
         if len(self.displayed_results) == 0:
             MsgBox(
@@ -761,26 +779,15 @@ class ControlPanel(tk.Toplevel):
                 algorithm=algorithm
             )
 
-    def button_3_on_treeview(self, event):
-        self.destroy_menu()
-        self.menu = tk.Menu(master=None, tearoff=False)
-        """self.menu.add_command(
-            label="Remove",
-            command=lambda: button_3_remove(treeview)
-        )"""
-        self.menu.add_command(
-            label="Open ADB Page",
-            command=self.button_3_open_url
-        )
-        self.menu.add_command(
-            label="Open Enneagram Scores",
-            command=self.button_3_open_scores
-        )
-        self.menu.post(event.x_root, event.y_root)
-
-    def destroy_menu(self):
-        if self.menu:
-            self.menu.destroy()
+    def button_3_remove(self):
+        selected = self.treeview.selection()
+        if not selected:
+            pass
+        else:
+            for i in selected:
+                self.treeview.delete(i)
+                self.displayed_results.remove(i)
+            self.info_var.set(len(self.displayed_results))
 
     def button_3_open_url(self):
         selected = self.treeview.selection()
@@ -792,3 +799,48 @@ class ControlPanel(tk.Toplevel):
             except tk.TclError:
                 return
             open_new(values[11])
+
+    def button_3_on_treeview(self, event):
+        self.destroy_menu(self.treeview_menu)
+        self.treeview_menu = tk.Menu(master=None, tearoff=False)
+        self.treeview_menu.add_command(
+            label="Open ADB Page",
+            command=self.button_3_open_url
+        )
+        self.treeview_menu.add_command(
+            label="Open Enneagram Scores",
+            command=self.button_3_open_scores
+        )
+        self.treeview_menu.add_command(
+            label="Remove",
+            command=self.button_3_remove
+        )
+        self.treeview_menu.post(event.x_root, event.y_root)
+
+    def button_3_on_entry(self, event):
+        self.destroy_menu(self.entry_menu)
+        self.entry_menu = tk.Menu(master=None, tearoff=False)
+        self.entry_menu.add_command(
+            label="Copy",
+            command=lambda: self.focus_get().event_generate('<<Copy>>'))
+        self.entry_menu.add_command(
+            label="Cut",
+            command=lambda: self.focus_get().event_generate('<<Cut>>'))
+        self.entry_menu.add_command(
+            label="Paste",
+            command=lambda: self.focus_get().event_generate('<<Paste>>'))
+        self.entry_menu.add_command(
+            label="Remove",
+            command=lambda: self.focus_get().event_generate('<<Clear>>'))
+        self.entry_menu.add_command(
+            label="Select All",
+            command=lambda: self.focus_get().event_generate('<<SelectAll>>'))
+        self.entry_menu.post(event.x_root, event.y_root)
+
+    @staticmethod
+    def destroy_menu(menu):
+        if menu:
+            menu.destroy()
+
+    def select_all_items(self):
+        self.treeview.selection_set(self.treeview.get_children())
