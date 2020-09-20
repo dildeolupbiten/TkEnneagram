@@ -82,13 +82,21 @@ class ADB(tk.Toplevel):
                 title="Adb",
                 catalogue=[
                     i for i in os.listdir("Adb")
-                    if i.endswith(".json")
+                    if (
+                            i.endswith(".json")
+                            and
+                            not i.startswith("categories_of_")
+                    )
                 ]
             )
             config = ConfigParser()
             config.read("defaults.ini")
             filename = config["ADB"]["selected"]
-            self.load_json(filename=os.path.join(".", "Adb", filename))
+            category_file = "categories_of_" + filename
+            self.load_json(
+                filename=os.path.join(".", "Adb", filename),
+                category_file=os.path.join(".", "Adb", category_file)
+            )
 
     def load_adb(self):
         self.database = []
@@ -212,10 +220,12 @@ class ADB(tk.Toplevel):
             [i for i in self.category_dict.values() if i is not None]
         )
 
-    def load_json(self, filename):
+    def load_json(self, filename, category_file):
         msgbox_info(self, f"Started loading the modified database.\n")
         with open(filename, encoding="utf-8") as file:
             self.database = json.load(file)
+        with open(category_file, encoding="utf-8") as file:
+            self.category_dict = json.load(file)
         msgbox_info(self, f"Completed loading the modified database.\n")
         msgbox_info(self, f"Started grouping categories.\n")
         self.group_categories()
@@ -226,6 +236,9 @@ class ADB(tk.Toplevel):
         path = os.path.join(".", "Adb", filename)
         with open(path, "w", encoding="utf-8") as file:
             json.dump(self.database, file, ensure_ascii=False, indent=4)
+        path = os.path.join(".", "Adb", "categories_of_" + filename)
+        with open(path, "w", encoding="utf-8") as file:
+            json.dump(self.category_dict, file, ensure_ascii=False, indent=4)
 
     def pbar(self, r, s, n, pbar, pstring, pframe, plabel):
         if r != s:
@@ -726,7 +739,9 @@ class ControlPanel(tk.Toplevel):
         tcanvas.create_window((4, 4), window=tframe, anchor="nw")
         tframe.bind(
             "<Configure>",
-            lambda event: tcanvas.configure(scrollregion=tcanvas.bbox("all"))
+            lambda event: tcanvas.configure(
+                scrollregion=tcanvas.bbox("all")
+            )
         )
         tbutton = tk.Button(master=button_frame, text="Apply")
         tbutton.pack()
@@ -741,17 +756,20 @@ class ControlPanel(tk.Toplevel):
         check_all.set(False)
         check_uncheck_.grid(row=0, column=0, sticky="nw")
         for num, category in enumerate(self.category_names, 1):
-            self.update()
-            cvar = tk.BooleanVar()
-            cvar_list.append([cvar, category])
-            checkbutton = tk.Checkbutton(
-                master=tframe,
-                text=category,
-                variable=cvar
-            )
-            checkbutton_list.append(checkbutton)
-            cvar.set(False)
-            checkbutton.grid(row=num, column=0, sticky="nw")
+            try:
+                self.update()
+                cvar = tk.BooleanVar()
+                cvar_list.append([cvar, category])
+                checkbutton = tk.Checkbutton(
+                    master=tframe,
+                    text=category,
+                    variable=cvar
+                )
+                checkbutton_list.append(checkbutton)
+                cvar.set(False)
+                checkbutton.grid(row=num, column=0, sticky="nw")
+            except tk.TclError:
+                return
         tbutton.configure(
             command=lambda: tbutton_command(
                 cvar_list,
