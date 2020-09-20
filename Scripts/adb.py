@@ -172,6 +172,7 @@ class ADB(tk.Toplevel):
         msgbox_info(self, f"Completed grouping categories.\n")
 
     def group_categories(self):
+        self.all_categories = {}
         for record in self.database:
             for category in record[-1]:
                 if (category[0], category[1]) not in self.all_categories:
