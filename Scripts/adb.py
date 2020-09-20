@@ -19,6 +19,7 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt="%d.%m.%Y %H:%M:%S"
 )
+logging.info(msg="Season Started.")
 
 
 class ADB(tk.Toplevel):
