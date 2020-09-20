@@ -213,7 +213,7 @@ class ADB(tk.Toplevel):
             except swe.Error:
                 logging.error(
                     msg=f"Can't calculate the astrological results:\n"
-                        f"\tRecord: {record}".expandtabs(4)
+                        f"\tRecord: {record}\n".expandtabs(4)
                 )
                 received += 1
                 continue
@@ -222,7 +222,7 @@ class ADB(tk.Toplevel):
             except KeyError:
                 logging.error(
                     msg=f"Can't calculate the score:\n"
-                        f"\tRecord: {record}".expandtabs(4)
+                        f"\tRecord: {record}\n".expandtabs(4)
                 )
                 received += 1
                 continue
