@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from .adb import ADB
 from .about import About
 from .modules import os, tk
+from .database import Database
 from .utilities import check_update
 from .constants import HOUSE_SYSTEMS, PLANETS
 from .selection import SingleSelection, MultipleSelection
@@ -12,7 +12,10 @@ class Menu(tk.Menu):
     def __init__(self, icons, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.master.configure(menu=self)
-        self.add_command(label="ADB", command=lambda: ADB(icons=icons))
+        self.add_command(
+            label="Database",
+            command=lambda: Database(icons=icons)
+        )
         self.select = tk.Menu(master=self, tearoff=False)
         self.add_cascade(label="Select", menu=self.select)
         self.help = tk.Menu(master=self, tearoff=False)

@@ -16,8 +16,8 @@ class Selection(tk.Toplevel):
                 self.selected = self.config[title.upper()]["selected"]
             if "AUTH" not in self.config:
                 self.config["AUTH"] = {"key": "None"}
-            if "ADB" not in self.config:
-                self.config["ADB"] = {"selected": "None"}
+            if "DATABASE" not in self.config:
+                self.config["DATABASE"] = {"selected": "None"}
         else:
             with open("defaults.ini", "w") as f:
                 self.config["HOUSE SYSTEM"] = {"selected": "Placidus"}
@@ -33,7 +33,7 @@ class Selection(tk.Toplevel):
                     "selected": "2010_Algorithm_Placidus.json"
                 }
                 self.config["AUTH"] = {"key": "None"}
-                self.config["ADB"] = {"selected": "None"}
+                self.config["DATABASE"] = {"selected": "None"}
                 self.config.write(f)          
         self.catalogue = catalogue
         self.resizable(width=False, height=False)

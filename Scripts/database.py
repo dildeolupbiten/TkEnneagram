@@ -23,10 +23,11 @@ logging.basicConfig(
 logging.info(msg="Season Started.\n")
 
 
-class ADB(tk.Toplevel):
+class Database(tk.Toplevel):
     def __init__(self, icons, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.title("ADB")
+        self.title("Database Control Panel")
+        self.mode = None
         self.resizable(width=False, height=False)
         self.icons = icons
         self.database = []
@@ -50,7 +51,14 @@ class ADB(tk.Toplevel):
             state="disabled",
             bd=0
         )
-        self.logging_text.pack()
+        self.logging_text.pack(side="left")
+        self.y_scrollbar = tk.Scrollbar(
+            master=self.bottomframe,
+            orient="vertical",
+            command=self.logging_text.yview
+        )
+        self.logging_text["yscrollcommand"] = self.y_scrollbar.set
+        self.y_scrollbar.pack(side="left", fill="y")
         self.logging_text.bind(
             sequence="<Button-1>",
             func=lambda event: "break"
@@ -64,26 +72,27 @@ class ADB(tk.Toplevel):
             func=lambda event: "break"
         )
         self.open_button = tk.Button(
-            master=self.bottomframe,
+            master=self,
             text="Open",
             command=lambda: ControlPanel(
                 self.database,
                 self.all_categories,
                 self.category_names,
-                self.icons
+                self.icons,
+                self.mode
             )
         )
 
     def choose_operation(self):
-        if not os.path.exists("Adb"):
-            os.makedirs("Adb")
-        if not os.listdir("Adb"):
+        if not os.path.exists("Database"):
+            os.makedirs("Database")
+        if not os.listdir("Database"):
             Thread(target=self.load_adb).start()
         else:
             SingleSelection(
-                title="Adb",
+                title="Database",
                 catalogue=[
-                    i for i in os.listdir("Adb")
+                    i for i in os.listdir("Database")
                     if (
                             i.endswith(".json")
                             and
@@ -93,14 +102,15 @@ class ADB(tk.Toplevel):
             )
             config = ConfigParser()
             config.read("defaults.ini")
-            filename = config["ADB"]["selected"]
+            filename = config["DATABASE"]["selected"]
             category_file = "categories_of_" + filename
             self.load_json(
-                filename=os.path.join(".", "Adb", filename),
-                category_file=os.path.join(".", "Adb", category_file)
+                filename=os.path.join(".", "Database", filename),
+                category_file=os.path.join(".", "Database", category_file)
             )
 
     def load_adb(self):
+        self.mode = "adb"
         self.database = []
         self.category_dict = {}
         self.logging_text["state"] = "normal"
@@ -223,30 +233,67 @@ class ADB(tk.Toplevel):
                     if category[1] is None:
                         pass
                     self.all_categories[(category[0], category[1])] = []
-                self.all_categories[(category[0], category[1])].append(record)
+                self.all_categories[
+                    (category[0], category[1])
+                ].append(record)
         self.category_names = sorted(
             [i for i in self.category_dict.values() if i is not None]
         )
 
     def load_json(self, filename, category_file):
-        if filename == "./Adb/None":
+        if filename == "./Database/None":
             return
-        msgbox_info(self, f"Started loading the modified database.\n")
+        msgbox_info(self, f"Started loading the database.\n")
         with open(filename, encoding="utf-8") as file:
             self.database = json.load(file)
-        with open(category_file, encoding="utf-8") as file:
-            self.category_dict = json.load(file)
-        msgbox_info(self, f"Completed loading the modified database.\n")
+        if not isinstance(self.database, dict):
+            self.mode = "adb"
+            with open(category_file, encoding="utf-8") as file:
+                self.category_dict = json.load(file)
+        else:
+            self.mode = "normal"
+            count = 1
+            for key, value in self.database.items():
+                if not value["Categories"]:
+                    cat = "None"
+                    if cat not in self.category_dict.values():
+                        self.category_dict[count] = cat
+                        count += 1
+                else:
+                    for cat in value["Categories"]:
+                        if cat not in self.category_dict.values():
+                            self.category_dict[count] = cat
+                            count += 1
+            r = {v: k for k, v in self.category_dict.items()}
+            db = []
+            for key, value in self.database.items():
+                if value["Categories"]:
+                    cate = [[r[cat], cat] for cat in value["Categories"]]
+                else:
+                    cate = [[r["None"], "None"]]
+                info = [
+                    v for k, v in value.items()
+                    if k not in [
+                        "Access Time", "Update Time", "Categories"
+                    ]
+                ]
+                record = [key] + \
+                    info + \
+                    [cate] + \
+                    [value["Access Time"], value["Update Time"]]
+                db.append(record)
+            self.database = db
+        msgbox_info(self, f"Completed loading the database.\n")
         msgbox_info(self, f"Started grouping categories.\n")
         self.group_categories()
         msgbox_info(self, f"Completed grouping categories.\n")
         self.open_button.pack()
 
     def extract_database(self, filename):
-        path = os.path.join(".", "Adb", filename)
+        path = os.path.join(".", "Database", filename)
         with open(path, "w", encoding="utf-8") as file:
             json.dump(self.database, file, ensure_ascii=False, indent=4)
-        path = os.path.join(".", "Adb", "categories_of_" + filename)
+        path = os.path.join(".", "Database", "categories_of_" + filename)
         with open(path, "w", encoding="utf-8") as file:
             json.dump(self.category_dict, file, ensure_ascii=False, indent=4)
 
@@ -379,6 +426,7 @@ class ControlPanel(tk.Toplevel):
             all_categories,
             category_names,
             icons,
+            mode,
             *args,
             **kwargs
     ):
@@ -389,6 +437,7 @@ class ControlPanel(tk.Toplevel):
         self.all_categories = all_categories
         self.category_names = category_names
         self.icons = icons
+        self.mode = mode
         self.displayed_results = []
         self.selected_categories = []
         self.selected_ratings = []
@@ -403,11 +452,18 @@ class ControlPanel(tk.Toplevel):
         self.midframe.pack()
         self.bottomframe = tk.Frame(master=self)
         self.bottomframe.pack()
-        self.columns = [
-            "Adb ID", "Name", "Gender", "Rodden Rating", "Date",
-            "Hour", "Julian Date", "Latitude", "Longitude", "Place",
-            "Country", "Adb Link", "Category", "Type", "Wing"
-        ]
+        if self.mode == "adb":
+            self.columns = [
+                "Adb ID", "Name", "Gender", "Rodden Rating", "Date",
+                "Hour", "Julian Date", "Latitude", "Longitude", "Place",
+                "Country", "Adb Link", "Category", "Type", "Wing"
+            ]
+        else:
+            self.columns = [
+                "No", "Name", "Gender", "Rodden Rating", "Date",
+                "Hour", "Julian Date", "Latitude", "Longitude", "Type",
+                "Wing", "URL", "Category", "Access Time", "Update Time"
+            ]
         self.treeview = Treeview(
             master=self.midframe,
             columns=self.columns,
@@ -534,16 +590,23 @@ class ControlPanel(tk.Toplevel):
     def create_checkbutton(self):
         check_frame = tk.Frame(master=self.topframe)
         check_frame.grid(row=0, column=2)
-        for i, j in enumerate(
-                (
-                    "event",
-                    "human",
-                    "male",
-                    "female",
-                    "North Hemisphere",
-                    "South Hemisphere"
-                 )
-        ):
+        if self.mode == "adb":
+            names = (
+                "event",
+                "human",
+                "male",
+                "female",
+                "North Hemisphere",
+                "South Hemisphere"
+             )
+        else:
+            names = (
+                "male",
+                "female",
+                "North Hemisphere",
+                "South Hemisphere"
+            )
+        for i, j in enumerate(names):
             var = tk.StringVar()
             var.set(value="0")
             checkbutton = tk.Checkbutton(
@@ -557,15 +620,27 @@ class ControlPanel(tk.Toplevel):
         north = self.checkbuttons["North Hemisphere"][0]
         south = self.checkbuttons["South Hemisphere"][0]
         if north.get() == "1" and south.get() == "0":
-            if "n" in item[7]:
-                pass
+            if isinstance(item[7], str):
+                if "n" in item[7]:
+                    pass
+                else:
+                    self.insert_to_treeview(item)
             else:
-                self.insert_to_treeview(item)
+                if item[7] > 0:
+                    pass
+                else:
+                    self.insert_to_treeview(item)
         elif north.get() == "0" and south.get() == "1":
-            if "s" in item[7]:
-                pass
+            if isinstance(item[7], str):
+                if "s" in item[7]:
+                    pass
+                else:
+                    self.insert_to_treeview(item)
             else:
-                self.insert_to_treeview(item)
+                if item[7] < 0:
+                    pass
+                else:
+                    self.insert_to_treeview(item)
         elif north.get() == "0" and south.get() == "0":
             self.insert_to_treeview(item)
         elif north.get() == "1" and south.get() == "1":
@@ -602,8 +677,14 @@ class ControlPanel(tk.Toplevel):
     def display_results(self):
         self.treeview.delete(*self.treeview.get_children())
         self.displayed_results = []
-        event = self.checkbuttons["event"][0]
-        human = self.checkbuttons["human"][0]
+        if self.mode == "adb":
+            event = self.checkbuttons["event"][0]
+            human = self.checkbuttons["human"][0]
+        else:
+            event = tk.StringVar()
+            event.set("0")
+            human = tk.StringVar()
+            human.set("0")
         for key, value in self.all_categories.items():
             if key[1] in self.selected_categories:
                 for item in value:
@@ -805,6 +886,12 @@ class ControlPanel(tk.Toplevel):
                 values = self.treeview.item(selected)["values"]
             except tk.TclError:
                 return
+            if self.mode == "adb":
+                latitude = str(round(convert_coordinates(values[7]), 2))
+                longitude = str(round(convert_coordinates(values[8]), 2))
+            else:
+                latitude = values[7]
+                longitude = values[8]
             config = ConfigParser()
             config.read("defaults.ini")
             algorithm = config["ALGORITHM"]["selected"]
@@ -817,8 +904,8 @@ class ControlPanel(tk.Toplevel):
                     "%d %B %Y"
                 ).strftime("%d.%m.%Y"),
                 "Time": values[5],
-                "Latitude": str(round(convert_coordinates(values[7]), 2)),
-                "Longitude": str(round(convert_coordinates(values[8]), 2))
+                "Latitude": latitude,
+                "Longitude": longitude
             }
             date = dt.strptime(values[4], "%d %B %Y")
             hour, minute = (int(i) for i in values[5].split(":"))
@@ -870,8 +957,12 @@ class ControlPanel(tk.Toplevel):
     def button_3_on_treeview(self, event):
         self.destroy_menu(self.treeview_menu)
         self.treeview_menu = tk.Menu(master=None, tearoff=False)
+        if self.mode == "adb":
+            label = "Open ADB Page"
+        else:
+            label = "Open Wikipedia Page"
         self.treeview_menu.add_command(
-            label="Open ADB Page",
+            label=label,
             command=self.button_3_open_url
         )
         self.treeview_menu.add_command(
