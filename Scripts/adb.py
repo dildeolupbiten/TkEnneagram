@@ -93,7 +93,6 @@ class ADB(tk.Toplevel):
             )
             config = ConfigParser()
             config.read("defaults.ini")
-            print(config["ADB"]["selected"])
             filename = config["ADB"]["selected"]
             category_file = "categories_of_" + filename
             self.load_json(
