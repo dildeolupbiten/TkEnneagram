@@ -6,226 +6,121 @@ from .constants import HOUSE_SYSTEMS
 from .selection import SingleSelection
 from .treeview import Treeview, TreeviewToplevel
 from .utilities import (
-    msgbox_info, convert_coordinates,
-    tbutton_command, check_all_command
+    convert_coordinates, tbutton_command, check_all_command
 )
 from .modules import (
-    os, dt, tk, np, ET, swe, ttk, json, time,
-    Thread, open_new, logging, ConfigParser
+    os, dt, tk, np, ET, swe, ttk, json,
+    time, open_new, logging, ConfigParser
 )
 
-logging.basicConfig(
-    filename="log.log",
-    format="- %(levelname)s - %(asctime)s - %(message)s",
-    level=logging.INFO,
-    datefmt="%d.%m.%Y %H:%M:%S"
-)
-logging.info(msg="Season Started.\n")
 
-
-class Database(tk.Toplevel):
-    def __init__(self, icons, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.title("Database Control Panel")
+class Database:
+    def __init__(self, root, icons):
         self.mode = None
-        self.resizable(width=False, height=False)
         self.icons = icons
-        self.database = []
+        self.database = None
         self.category_dict = {}
         self.all_categories = {}
         self.category_names = []
-        self.topframe = tk.Frame(master=self)
-        self.topframe.pack()
-        self.bottomframe = tk.Frame(master=self)
-        self.bottomframe.pack()
-        self.load_button = tk.Button(
-            master=self.topframe,
-            text="Load",
-            width=10,
-            command=self.choose_operation
-        )
-        self.load_button.grid(row=0, column=0)
-        self.logging_text = tk.Text(
-            master=self.bottomframe,
-            bg=self["bg"],
-            state="disabled",
-            bd=0
-        )
-        self.logging_text.pack(side="left")
-        self.y_scrollbar = tk.Scrollbar(
-            master=self.bottomframe,
-            orient="vertical",
-            command=self.logging_text.yview
-        )
-        self.logging_text["yscrollcommand"] = self.y_scrollbar.set
-        self.y_scrollbar.pack(side="left", fill="y")
-        self.logging_text.bind(
-            sequence="<Button-1>",
-            func=lambda event: "break"
-        )
-        self.logging_text.bind(
-            sequence="<Motion>",
-            func=lambda event: "break"
-        )
-        self.logging_text.bind(
-            sequence="<Button-3>",
-            func=lambda event: "break"
-        )
-        self.open_button = tk.Button(
-            master=self,
-            text="Open",
-            command=lambda: ControlPanel(
-                self.database,
-                self.all_categories,
-                self.category_names,
-                self.icons,
-                self.mode
-            )
-        )
+        self.choose_operation(root=root)
 
-    def choose_operation(self):
+    def choose_operation(self, root):
         if not os.path.exists("Database"):
             os.makedirs("Database")
         if not os.listdir("Database"):
-            Thread(target=self.load_adb).start()
+            return
         else:
             SingleSelection(
                 title="Database",
-                catalogue=[
-                    i for i in os.listdir("Database")
-                    if (
-                            i.endswith(".json")
-                            and
-                            not i.startswith("categories_of_")
-                    )
-                ]
+                catalogue=[i for i in os.listdir("Database")]
             )
             config = ConfigParser()
             config.read("defaults.ini")
             filename = config["DATABASE"]["selected"]
-            category_file = "categories_of_" + filename
-            self.load_json(
-                filename=os.path.join(".", "Database", filename),
-                category_file=os.path.join(".", "Database", category_file)
+            if filename.endswith(".xml"):
+                self.load_adb(filename=filename)
+
+            else:
+                self.load_json(
+                    filename=os.path.join(".", "Database", filename),
+                )
+            DatabaseFrame(
+                master=root,
+                database=self.database,
+                all_categories=self.all_categories,
+                category_names=self.category_names,
+                icons=self.icons,
+                mode=self.mode
             )
 
-    def load_adb(self):
+    def load_adb(self, filename):
         self.mode = "adb"
         self.database = []
         self.category_dict = {}
-        self.logging_text["state"] = "normal"
-        self.logging_text.delete("1.0", "end")
-        self.logging_text["state"] = "disabled"
-        self.open_button.pack_forget()
-        xml_files = {
-            dt.strftime(
-                dt.fromtimestamp(os.stat(xml).st_mtime),
-                "%d.%m.%Y"
-            ): xml
-            for xml in os.listdir(os.getcwd())
-            if xml.endswith("xml")
-        }
-        if not xml_files:
-            MsgBox(
-                title="Warning",
-                message="There is no database!",
-                level="warning",
-                icons=self.icons
-            )
-            return
-        xml_files = {key: xml_files[key] for key in sorted(xml_files)}
-        filename = []
-        for xml_file in xml_files.values():
-            filename.append(xml_file.replace(".xml", ""))
-            xml_database = []
-            ignored = 0
-            msgbox_info(self, f"Parsing {xml_file} file...\n")
-            tree = ET.parse(xml_file)
-            root = tree.getroot()
-            for i in range(1000000):
-                try:
-                    start_stop = False
-                    user_data = []
-                    for gender, roddenrating, bdata, adb_link, categories in \
-                            zip(
-                                root[i + 2][1].findall("gender"),
-                                root[i + 2][1].findall("roddenrating"),
-                                root[i + 2][1].findall("bdata"),
-                                root[i + 2][2].findall("adb_link"),
-                                root[i + 2][3].findall("categories")
-                            ):
-                        name = root[i + 2][1][0].text
-                        for record in self.database:
-                            if name == record[1]:
-                                ignored += 1
-                                start_stop = True
-                                break
-                        if start_stop:
-                            break
-                        else:
-                            sbdate_dmy = bdata[1].text
-                            sbtime = bdata[2].text
-                            jd_ut = bdata[2].get("jd_ut")
-                            lat = bdata[3].get("slati")
-                            lon = bdata[3].get("slong")
-                            place = bdata[3].text
-                            country = bdata[4].text
-                            category = [
-                                (
-                                    categories[j].get("cat_id"),
-                                    categories[j].text
-                                )
-                                for j in range(len(categories))
-                            ]
-                            for cate in category:
-                                if cate[0] not in self.category_dict.keys():
-                                    self.category_dict[cate[0]] = cate[1]
-                            user_data.append(int(root[i + 2].get("adb_id")))
-                            user_data.append(name)
-                            user_data.append(gender.text)
-                            user_data.append(roddenrating.text)
-                            user_data.append(sbdate_dmy)
-                            user_data.append(sbtime)
-                            user_data.append(jd_ut)
-                            user_data.append(lat)
-                            user_data.append(lon)
-                            user_data.append(place)
-                            user_data.append(country)
-                            user_data.append(adb_link.text)
-                            user_data.append(category)
-                            if len(user_data) != 0:
-                                xml_database.append(user_data)
-                except IndexError:
-                    break
+        logging.info(f"Parsing {filename} file...")
+        tree = ET.parse(filename)
+        root = tree.getroot()
+        for i in range(1000000):
             try:
-                msgbox_info(self, "Completed parsing.\n")
-                msgbox_info(self, f"{ignored} records are ignored.\n")
-                msgbox_info(
-                    self,
-                    f"{len(xml_database)} records are inserted.\n"
-                )
-                self.database.extend(xml_database)
-                msgbox_info(
-                    self,
-                    f"{len(self.database)} records are available.\n"
-                )
-            except tk.TclError:
-                return
+                user_data = []
+                for gender, roddenrating, bdata, adb_link, categories in \
+                        zip(
+                            root[i + 2][1].findall("gender"),
+                            root[i + 2][1].findall("roddenrating"),
+                            root[i + 2][1].findall("bdata"),
+                            root[i + 2][2].findall("adb_link"),
+                            root[i + 2][3].findall("categories")
+                        ):
+                    name = root[i + 2][1][0].text
+                    sbdate_dmy = bdata[1].text
+                    sbtime = bdata[2].text
+                    jd_ut = bdata[2].get("jd_ut")
+                    lat = bdata[3].get("slati")
+                    lon = bdata[3].get("slong")
+                    place = bdata[3].text
+                    country = bdata[4].text
+                    category = [
+                        (
+                            categories[j].get("cat_id"),
+                            categories[j].text
+                        )
+                        for j in range(len(categories))
+                    ]
+                    for cate in category:
+                        if cate[0] not in self.category_dict.keys():
+                            self.category_dict[cate[0]] = cate[1]
+                    user_data.append(int(root[i + 2].get("adb_id")))
+                    user_data.append(name)
+                    user_data.append(gender.text)
+                    user_data.append(roddenrating.text)
+                    user_data.append(sbdate_dmy)
+                    user_data.append(sbtime)
+                    user_data.append(jd_ut)
+                    user_data.append(lat)
+                    user_data.append(lon)
+                    user_data.append(place)
+                    user_data.append(country)
+                    user_data.append(adb_link.text)
+                    user_data.append(category)
+                    if len(user_data) != 0:
+                        self.database.append(user_data)
+            except IndexError:
+                break
+        try:
+            logging.info("Completed parsing.")
+            logging.info(f"{len(self.database)} records are available.")
+        except tk.TclError:
+            return
         self.calculate()
-        msgbox_info(self, f"Started grouping categories.\n")
         self.group_categories()
-        msgbox_info(self, f"Completed grouping categories.\n")
-        msgbox_info(self, f"Started extracting the modified database.\n")
         config = ConfigParser()
         config.read("defaults.ini")
-        filename = "&".join(filename) + "_" + \
-                   config["ALGORITHM"]["selected"].replace(
-                       ".json", ""
-                   ) + ".json"
+        filename = filename.replace(".xml", "") + \
+            config["ALGORITHM"]["selected"].replace(".json", "") + ".json"
         self.extract_database(filename=filename)
-        msgbox_info(self, f"Completed extracting the modified database.\n")
 
     def group_categories(self):
+        logging.info(f"Started grouping categories.")
         self.all_categories = {}
         for record in self.database:
             for category in record[-3]:
@@ -239,17 +134,21 @@ class Database(tk.Toplevel):
         self.category_names = sorted(
             [i for i in self.category_dict.values() if i is not None]
         )
+        logging.info(f"Completed grouping categories.")
 
-    def load_json(self, filename, category_file):
+    def load_json(self, filename):
         if filename == "./Database/None":
             return
-        msgbox_info(self, f"Started loading the database.\n")
+        logging.info(f"Parsing {filename} file...")
         with open(filename, encoding="utf-8") as file:
             self.database = json.load(file)
+        self.category_dict = {}
         if not isinstance(self.database, dict):
             self.mode = "adb"
-            with open(category_file, encoding="utf-8") as file:
-                self.category_dict = json.load(file)
+            for record in self.database:
+                for cate in record[-3]:
+                    if cate[0] not in self.category_dict:
+                        self.category_dict[cate[0]] = cate[1]
         else:
             self.mode = "normal"
             count = 1
@@ -283,21 +182,17 @@ class Database(tk.Toplevel):
                     [value["Access Time"], value["Update Time"]]
                 db.append(record)
             self.database = db
-        msgbox_info(self, f"Completed loading the database.\n")
-        msgbox_info(self, f"Started grouping categories.\n")
+        logging.info("Completed parsing.")
+        logging.info(f"{len(self.database)} records are available.")
         self.group_categories()
-        msgbox_info(self, f"Completed grouping categories.\n")
-        self.open_button.pack()
 
     def extract_database(self, filename):
         path = os.path.join(".", "Database", filename)
         with open(path, "w", encoding="utf-8") as file:
             json.dump(self.database, file, ensure_ascii=False, indent=4)
-        path = os.path.join(".", "Database", "categories_of_" + filename)
-        with open(path, "w", encoding="utf-8") as file:
-            json.dump(self.category_dict, file, ensure_ascii=False, indent=4)
 
-    def pbar(self, r, s, n, pbar, pstring, pframe, plabel):
+    @staticmethod
+    def pbar(r, s, n, pbar, pstring, pframe, plabel):
         if r != s:
             try:
                 pbar["value"] = r
@@ -319,12 +214,10 @@ class Database(tk.Toplevel):
             pframe.destroy()
             pbar.destroy()
             plabel.destroy()
-            self.open_button.pack()
-            msgbox_info(self, "Completed calculating.\n")
+            logging.info("Completed calculating.")
 
     def calculate(self):
-        self.open_button.pack_forget()
-        msgbox_info(self, "Started calculating.\n")
+        logging.info("Started calculating.")
         size = len(self.database)
         received = 0
         now = time.time()
@@ -419,7 +312,9 @@ class Database(tk.Toplevel):
             self.database.remove(i)
 
 
-class ControlPanel(tk.Toplevel):
+class DatabaseFrame(tk.Frame):
+    widgets = []
+
     def __init__(
             self,
             database,
@@ -431,8 +326,9 @@ class ControlPanel(tk.Toplevel):
             **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.title("Control Panel")
-        self.geometry("800x650")
+        for i in self.widgets:
+            i.destroy()
+        self.pack()
         self.database = database
         self.all_categories = all_categories
         self.category_names = category_names
@@ -552,7 +448,7 @@ class ControlPanel(tk.Toplevel):
             textvariable=self.info_var
         )
         self.msgbox_info.grid(row=0, column=1)
-        self.resizable(width=False, height=False)
+        self.widgets.append(self)
 
     def add_command(self, record):
         if record in self.displayed_results:
@@ -907,15 +803,8 @@ class ControlPanel(tk.Toplevel):
                 "Latitude": latitude,
                 "Longitude": longitude
             }
-            date = dt.strptime(values[4], "%d %B %Y")
-            hour, minute = (int(i) for i in values[5].split(":"))
             user = Enneagram(
-                year=date.year,
-                month=date.month,
-                day=date.day,
-                hour=hour,
-                minute=minute,
-                second=0,
+                jd=float(values[6]),
                 lat=float(info["Latitude"]),
                 lon=float(info["Longitude"]),
                 hsys=hsys,

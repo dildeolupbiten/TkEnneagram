@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .constants import PLANETS
-from .modules import os, tk, ConfigParser
+from .modules import tk, ConfigParser
 
 
 class Selection(tk.Toplevel):
@@ -9,32 +8,8 @@ class Selection(tk.Toplevel):
         super().__init__(*args, **kwargs)
         self.title(title)
         self.config = ConfigParser()
-        self.selected = ""
-        if os.path.exists("defaults.ini"):
-            self.config.read("defaults.ini")
-            if title.upper() in self.config:
-                self.selected = self.config[title.upper()]["selected"]
-            if "AUTH" not in self.config:
-                self.config["AUTH"] = {"key": "None"}
-            if "DATABASE" not in self.config:
-                self.config["DATABASE"] = {"selected": "None"}
-        else:
-            with open("defaults.ini", "w") as f:
-                self.config["HOUSE SYSTEM"] = {"selected": "Placidus"}
-                self.config["PLANETS"] = {
-                    "selected": 
-                    ", ".join(
-                            planet 
-                            for planet in PLANETS 
-                            if planet not in ["Ascendant", "Midheaven"]
-                        )
-                    }
-                self.config["ALGORITHM"] = {
-                    "selected": "2010_Algorithm_Placidus.json"
-                }
-                self.config["AUTH"] = {"key": "None"}
-                self.config["DATABASE"] = {"selected": "None"}
-                self.config.write(f)          
+        self.config.read("defaults.ini")
+        self.selected = self.config[title.upper()]["selected"]
         self.catalogue = catalogue
         self.resizable(width=False, height=False)
         self.topframe = tk.Frame(master=self)
@@ -62,7 +37,6 @@ class SingleSelection(Selection):
             *args,
             **kwargs
         )
-        self.geometry("500x400")
         for i, j in enumerate(self.catalogue):
             var = tk.StringVar()
             if j == self.selected:

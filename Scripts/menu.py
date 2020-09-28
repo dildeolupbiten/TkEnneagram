@@ -4,6 +4,7 @@ from .about import About
 from .modules import os, tk
 from .database import Database
 from .utilities import check_update
+from .user_entry_form import UserEntryForm
 from .constants import HOUSE_SYSTEMS, PLANETS
 from .selection import SingleSelection, MultipleSelection
 
@@ -14,7 +15,16 @@ class Menu(tk.Menu):
         self.master.configure(menu=self)
         self.add_command(
             label="Database",
-            command=lambda: Database(icons=icons)
+            command=lambda: Database(
+                root=self.master,
+                icons=icons
+            )
+        )
+        self.add_command(
+            label="User Entry",
+            command=lambda: UserEntryForm(
+                icons=icons
+            )
         )
         self.select = tk.Menu(master=self, tearoff=False)
         self.add_cascade(label="Select", menu=self.select)

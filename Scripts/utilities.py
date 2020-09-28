@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from .constants import SIGNS
 from .messagebox import MsgBox
+from .constants import SIGNS, PLANETS
 from .modules import (
-    dt, os, json, urlopen, URLError, Popen, ImageTk, pickle
+    os, json, urlopen, URLError, Popen, ImageTk, pickle, ConfigParser
 )
 
 
@@ -102,15 +102,6 @@ def check_update(icons):
         )
 
 
-def msgbox_info(self, message):
-    self.logging_text["state"] = "normal"
-    self.logging_text.insert(
-        "insert",
-        f"- INFO - {dt.now().strftime('%Y.%m.%d %H:%M:%S')} - {message}"
-    )
-    self.logging_text["state"] = "disabled"
-
-
 def convert_coordinates(coord):
     if "n" in coord:
         d, _m = coord.split("n")
@@ -167,3 +158,23 @@ def decrypt(file, password):
         chr(item - password - index)
         for index, item in enumerate(data)
     )
+
+
+def load_defaults():
+    if os.path.exists("defaults.ini"):
+        return
+    config = ConfigParser()
+    with open("defaults.ini", "w") as f:
+        config["HOUSE SYSTEM"] = {"selected": "Placidus"}
+        config["PLANETS"] = {
+            "selected":
+                ", ".join(
+                    planet
+                    for planet in PLANETS
+                    if planet not in ["Ascendant", "Midheaven"]
+                )
+        }
+        config["ALGORITHM"] = {"selected": "2010_Algorithm_Placidus.json"}
+        config["AUTH"] = {"selected": "None"}
+        config["DATABASE"] = {"selected": "None"}
+        config.write(f)

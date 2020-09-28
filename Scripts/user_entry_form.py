@@ -7,10 +7,12 @@ from .treeview import TreeviewToplevel
 from .modules import tk, ttk, ConfigParser, Nominatim
 
 
-class UserEntryForm(tk.Frame):
+class UserEntryForm(tk.Toplevel):
     def __init__(self, icons, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.pack()
+        self.title("User Entry Form")
+        self.geometry("500x500")
+        self.resizable(width=False, height=False)
         self.icons = icons
         self.style = ttk.Style()
         self.entry_names = [
@@ -65,12 +67,10 @@ class UserEntryForm(tk.Frame):
                     else:
                         if m == "Place":
                             width = 50
-                            state = "normal"
                             entry = ttk.Combobox(
                                 master=sub_frame,
                                 width=width,
                                 style="TCombobox",
-                                state=state,
                                 values=[]
                             )
                             entry.bind(
@@ -82,12 +82,10 @@ class UserEntryForm(tk.Frame):
                             )
                         else:
                             width = 10
-                            state = "readonly"
                             entry = ttk.Entry(
                                 master=sub_frame,
                                 width=width,
                                 style=f"{m}.TEntry",
-                                state=state
                             )
                     entry.pack()
                     self.entries[m] = entry
@@ -139,14 +137,10 @@ class UserEntryForm(tk.Frame):
 
     def insert_coordinates(self, widget, locations):
         lat, lon = locations[widget.get()]
-        self.entries["Latitude"].config(state="normal")
-        self.entries["Longitude"].config(state="normal")
         self.entries["Latitude"].delete("0", "end")
         self.entries["Longitude"].delete("0", "end")
         self.entries["Latitude"].insert("insert", lat)
         self.entries["Longitude"].insert("insert", lon)
-        self.entries["Latitude"].config(state="readonly")
-        self.entries["Longitude"].config(state="readonly")
 
     def control(self, widget):
         if widget.get():
