@@ -116,7 +116,7 @@ class Database:
         self.group_categories()
         config = ConfigParser()
         config.read("defaults.ini")
-        filename = os.path.split(filename).replace(".xml", "") + \
+        filename = os.path.split(filename)[-1].replace(".xml", "") + \
             config["ALGORITHM"]["selected"].replace(".json", "") + ".json"
         self.extract_database(filename=filename)
 
