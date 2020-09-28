@@ -193,7 +193,7 @@ class Database:
             json.dump(self.database, file, ensure_ascii=False, indent=4)
 
     def calculate(self):
-        logging.info("Started calculating.")
+        logging.info("Started calculating.\n")
         size = len(self.database)
         received = 0
         now = time.time()
@@ -251,6 +251,7 @@ class Database:
             received += 1
             progress(s=size, r=received, n=now)
         print()
+        logging.info("\nCompleted calculating.")
         for i in will_be_removed:
             self.database.remove(i)
 
