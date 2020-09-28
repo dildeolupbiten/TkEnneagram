@@ -3,7 +3,7 @@
 from .messagebox import MsgBox
 from .constants import SIGNS, PLANETS
 from .modules import (
-    os, json, urlopen, URLError, Popen, ImageTk, pickle, ConfigParser
+    os, json, time, urlopen, URLError, Popen, ImageTk, pickle, ConfigParser
 )
 
 
@@ -178,3 +178,18 @@ def load_defaults():
         config["AUTH"] = {"selected": "None"}
         config["DATABASE"] = {"selected": "None"}
         config.write(f)
+        
+        
+def progress(s, r, n):
+    print(
+        u"\r|{}{}| {} %, {} r, {} s, {} r/s, {} s remaining."
+        .format(
+            "\u2586" * int(25 * r / s),
+            " " * (25 - int(25 * r / s)),
+            int(100 * r / s),
+            r,
+            int(time.time() - n),
+            int(r / (time.time() - n)),
+            int(s / (r / (time.time() - n))) - int(time.time() - n)
+        ), end="", flush=True
+    )
