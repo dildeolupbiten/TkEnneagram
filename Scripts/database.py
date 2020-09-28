@@ -6,10 +6,10 @@ from .constants import HOUSE_SYSTEMS
 from .selection import SingleSelection
 from .treeview import Treeview, TreeviewToplevel
 from .utilities import (
-    convert_coordinates, tbutton_command, check_all_command
+    convert_coordinates, tbutton_command, check_all_command, progress
 )
 from .modules import (
-    os, dt, tk, np, ET, swe, ttk, json,
+    os, dt, tk, np, ET, swe, json,
     time, open_new, logging, ConfigParser
 )
 
@@ -40,6 +40,7 @@ class Database:
             if filename.endswith(".xml"):
                 self.load_adb(
                     filename=os.path.join(".", "Database", filename)
+                )
             else:
                 self.load_json(
                     filename=os.path.join(".", "Database", filename),
@@ -191,48 +192,11 @@ class Database:
         with open(path, "w", encoding="utf-8") as file:
             json.dump(self.database, file, ensure_ascii=False, indent=4)
 
-    @staticmethod
-    def pbar(r, s, n, pbar, pstring, pframe, plabel):
-        if r != s:
-            try:
-                pbar["value"] = r
-                pbar["maximum"] = s
-                pstring.set(
-                    "{} %, {} minutes remaining.".format(
-                        int(100 * r / s),
-                        round(
-                            (
-                                int(s / (r / (time.time() - n)))
-                                - int(time.time() - n)
-                            ) / 60
-                        )
-                    )
-                )
-            except tk.TclError:
-                return
-        else:
-            pframe.destroy()
-            pbar.destroy()
-            plabel.destroy()
-            logging.info("Completed calculating.")
-
     def calculate(self):
         logging.info("Started calculating.")
         size = len(self.database)
         received = 0
         now = time.time()
-        pframe = tk.Frame(master=self)
-        pbar = ttk.Progressbar(
-            master=pframe,
-            orient="horizontal",
-            length=200,
-            mode="determinate"
-        )
-        pstring = tk.StringVar()
-        plabel = tk.Label(master=pframe, textvariable=pstring)
-        pframe.pack()
-        pbar.pack(side="left")
-        plabel.pack(side="left")
         will_be_removed = []
         for record in self.database:
             jd = float(record[6])
@@ -246,40 +210,26 @@ class Database:
                     hsys="P"
                 )
             except swe.Error:
+                print()
                 logging.error(
                     msg=f"Can't calculate the astrological results:\n"
                         f"\tRecord: {record}\n".expandtabs(4)
                 )
                 received += 1
                 will_be_removed.append(record)
-                self.pbar(
-                    r=received,
-                    s=size,
-                    n=now,
-                    pbar=pbar,
-                    pstring=pstring,
-                    pframe=pframe,
-                    plabel=plabel
-                )
+                progress(s=size, r=received, n=now)
                 continue
             try:
                 score = result.get_all_scores()
             except KeyError:
+                print()
                 logging.error(
                     msg=f"Can't calculate the score:\n"
                         f"\tRecord: {record}\n".expandtabs(4)
                 )
                 received += 1
                 will_be_removed.append(record)
-                self.pbar(
-                    r=received,
-                    s=size,
-                    n=now,
-                    pbar=pbar,
-                    pstring=pstring,
-                    pframe=pframe,
-                    plabel=plabel
-                )
+                progress(s=size, r=received, n=now)
                 continue
             dayscores = np.array(
                 [v for k, v in score["sign"]["Dayscores"].items()]
@@ -299,15 +249,8 @@ class Database:
             enneagram_type = f"Type-{enneagram_type + 1}"
             record.extend([enneagram_type, enneagram_wing])
             received += 1
-            self.pbar(
-                r=received,
-                s=size,
-                n=now,
-                pbar=pbar,
-                pstring=pstring,
-                pframe=pframe,
-                plabel=plabel
-            )
+            progress(s=size, r=received, n=now)
+        print()
         for i in will_be_removed:
             self.database.remove(i)
 
