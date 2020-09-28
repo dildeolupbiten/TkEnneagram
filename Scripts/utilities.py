@@ -3,7 +3,8 @@
 from .messagebox import MsgBox
 from .constants import SIGNS, PLANETS
 from .modules import (
-    os, json, time, urlopen, URLError, Popen, ImageTk, pickle, ConfigParser
+    os, json, time, urlopen, URLError, Popen, 
+    ImageTk, pickle, ConfigParser
 )
 
 
