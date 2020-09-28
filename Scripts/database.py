@@ -9,7 +9,7 @@ from .utilities import (
     convert_coordinates, tbutton_command, check_all_command, progress
 )
 from .modules import (
-    os, dt, tk, np, ET, swe, ttk, json,
+    os, dt, tk, np, ET, swe, json,
     time, open_new, logging, ConfigParser
 )
 
