@@ -116,7 +116,7 @@ class Database:
         self.group_categories()
         config = ConfigParser()
         config.read("defaults.ini")
-        filename = filename.replace(".xml", "") + \
+        filename = os.path.split(filename).replace(".xml", "") + \
             config["ALGORITHM"]["selected"].replace(".json", "") + ".json"
         self.extract_database(filename=filename)
 
@@ -210,7 +210,7 @@ class Database:
                     hsys="P"
                 )
             except swe.Error:
-                print()
+                print("\n")
                 logging.error(
                     msg=f"Can't calculate the astrological results:\n"
                         f"\tRecord: {record}\n".expandtabs(4)
@@ -222,7 +222,7 @@ class Database:
             try:
                 score = result.get_all_scores()
             except KeyError:
-                print()
+                print("\n")
                 logging.error(
                     msg=f"Can't calculate the score:\n"
                         f"\tRecord: {record}\n".expandtabs(4)
