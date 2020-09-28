@@ -250,8 +250,8 @@ class Database:
             record.extend([enneagram_type, enneagram_wing])
             received += 1
             progress(s=size, r=received, n=now)
-        print()
-        logging.info("\nCompleted calculating.")
+        print("\n")
+        logging.info("Completed calculating.")
         for i in will_be_removed:
             self.database.remove(i)
 
