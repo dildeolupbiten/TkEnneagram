@@ -38,8 +38,8 @@ class Database:
             config.read("defaults.ini")
             filename = config["DATABASE"]["selected"]
             if filename.endswith(".xml"):
-                self.load_adb(filename=filename)
-
+                self.load_adb(
+                    filename=os.path.join(".", "Database", filename)
             else:
                 self.load_json(
                     filename=os.path.join(".", "Database", filename),
