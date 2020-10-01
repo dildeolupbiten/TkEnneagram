@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-#
 
 from .messagebox import MsgBox
 from .enneagram import Enneagram
