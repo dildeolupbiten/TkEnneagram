@@ -23,6 +23,24 @@ class Database:
         self.all_categories = {}
         self.category_names = []
         self.choose_operation(root=root)
+        
+    def load_database(self, root, filename):
+        if filename.endswith(".xml"):
+            self.load_adb(
+                filename=os.path.join(".", "Database", filename)
+            )
+        else:
+            self.load_json(
+                filename=os.path.join(".", "Database", filename),
+            )
+        DatabaseFrame(
+            master=root,
+            database=self.database,
+            all_categories=self.all_categories,
+            category_names=self.category_names,
+            icons=self.icons,
+            mode=self.mode
+        )
 
     def choose_operation(self, root):
         if not os.path.exists("Database"):
@@ -37,22 +55,8 @@ class Database:
             config = ConfigParser()
             config.read("defaults.ini")
             filename = config["DATABASE"]["selected"]
-            if filename.endswith(".xml"):
-                self.load_adb(
-                    filename=os.path.join(".", "Database", filename)
-                )
-            else:
-                self.load_json(
-                    filename=os.path.join(".", "Database", filename),
-                )
-            DatabaseFrame(
-                master=root,
-                database=self.database,
-                all_categories=self.all_categories,
-                category_names=self.category_names,
-                icons=self.icons,
-                mode=self.mode
-            )
+            Thread(target=lambda: self.load_database(root, filename)).start()
+
 
     def load_adb(self, filename):
         self.mode = "adb"
@@ -116,7 +120,7 @@ class Database:
         self.group_categories()
         config = ConfigParser()
         config.read("defaults.ini")
-        filename = os.path.split(filename)[-1].replace(".xml", "") + \
+        filename = os.path.split(filename)[-1].replace(".xml", "") + "_" +  \
             config["ALGORITHM"]["selected"].replace(".json", "") + ".json"
         self.extract_database(filename=filename)
 
