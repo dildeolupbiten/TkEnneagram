@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from .messagebox import MsgBox
 from .constants import SIGNS, PLANETS
-from .modules import (
-    os, json, time, urlopen, URLError, Popen, 
-    ImageTk, pickle, ConfigParser
-)
+from .modules import os, time, PhotoImage, pickle, ConfigParser
 
 
 def convert_degree(degree):
@@ -36,9 +32,8 @@ def dms_to_dd(dms):
 def create_image_files(path):
     return {
         i[:-4]: {
-            "name": i[4:-4].replace("_", " ").title(),
             "path": os.path.join(os.getcwd(), path, i),
-            "img": ImageTk.PhotoImage(
+            "img": PhotoImage(
                 file=os.path.join(os.getcwd(), path, i)
             )
         }
@@ -46,61 +41,22 @@ def create_image_files(path):
     }
 
 
-def check_update(icons):
-    update = False
-    for d in ["Scripts", "Algorithms"]:
-        try:
-            scripts = json.load(
-                urlopen(
-                    url=f"https://api.github.com/repos/dildeolupbiten/"
-                        f"TkEnneagram/contents/{d}?ref=master"
+def progressbar(s, r, n, pframe, pbar, plabel, pstring):
+    if r != s:
+        pbar["value"] = r
+        pbar["maximum"] = s
+        pstring.set(
+            "{} %, {} minutes remaining.".format(
+                int(100 * r / s),
+                round(
+                    (int(s / (r / (time.time() - n))) -
+                     int(time.time() - n)) / 60
                 )
             )
-        except URLError:
-            MsgBox(
-                title="Info",
-                message="Couldn't connect to server.",
-                level="info",
-                icons=icons
-            )
-            return
-        for i in scripts:
-            file = urlopen(i["download_url"]).read().decode()
-            if i["name"] not in os.listdir(d):
-                update = True
-                with open(f"{d}/{i['name']}", "w", encoding="utf-8") as f:
-                    f.write(file)
-            else:
-                with open(f"{d}/{i['name']}", "r", encoding="utf-8") as f:
-                    if file != f.read():
-                        update = True
-                        with open(
-                                f"{d}/{i['name']}",
-                                "w",
-                                encoding="utf-8"
-                        ) as g:
-                            g.write(file)
-    if update:
-        MsgBox(
-            title="Info",
-            message="Program is updated.",
-            level="info",
-            icons=icons
         )
-        if os.name == "posix":
-            Popen(["python3", "run.py"])
-            import signal
-            os.kill(os.getpid(), signal.SIGKILL)
-        elif os.name == "nt":
-            Popen(["python", "run.py"])
-            os.system(f"TASKKILL /F /PID {os.getpid()}")
     else:
-        MsgBox(
-            title="Info",
-            message="Program is up-to-date.",
-            level="info",
-            icons=icons
-        )
+        master = pframe["master"]
+        master.destroy()
 
 
 def convert_coordinates(coord):
@@ -179,18 +135,3 @@ def load_defaults():
         config["AUTH"] = {"selected": "None"}
         config["DATABASE"] = {"selected": "None"}
         config.write(f)
-        
-        
-def progress(s, r, n):
-    print(
-        u"\r|{}{}| {} %, {} r, {} s, {} r/s, {} s remaining."
-        .format(
-            "\u2586" * int(25 * r / s),
-            " " * (25 - int(25 * r / s)),
-            int(100 * r / s),
-            r,
-            int(time.time() - n),
-            int(r / (time.time() - n)),
-            int(s / (r / (time.time() - n))) - int(time.time() - n)
-        ), end="", flush=True
-    )

@@ -6,11 +6,11 @@ from .constants import HOUSE_SYSTEMS
 from .selection import SingleSelection
 from .treeview import Treeview, TreeviewToplevel
 from .utilities import (
-    convert_coordinates, tbutton_command, check_all_command, progress
+    convert_coordinates, tbutton_command, check_all_command, progressbar
 )
 from .modules import (
-    os, dt, tk, np, ET, swe, json,
-    time, open_new, logging, ConfigParser
+    os, dt, tk, np, ET, swe, ttk, json,
+    time, open_new, logging, Thread, ConfigParser
 )
 
 
@@ -56,7 +56,6 @@ class Database:
             config.read("defaults.ini")
             filename = config["DATABASE"]["selected"]
             Thread(target=lambda: self.load_database(root, filename)).start()
-
 
     def load_adb(self, filename):
         self.mode = "adb"
@@ -197,10 +196,25 @@ class Database:
             json.dump(self.database, file, ensure_ascii=False, indent=4)
 
     def calculate(self):
-        logging.info("Started calculating.\n")
+        logging.info("Started calculating.")
         size = len(self.database)
         received = 0
         now = time.time()
+        toplevel = tk.Toplevel()
+        toplevel.title("Calculating")
+        toplevel.resizable(width=False, height=False)
+        pframe = tk.Frame(master=toplevel)
+        pbar = ttk.Progressbar(
+            master=pframe,
+            orient="horizontal",
+            length=200,
+            mode="determinate"
+        )
+        pstring = tk.StringVar()
+        plabel = tk.Label(master=pframe, textvariable=pstring)
+        pframe.pack()
+        pbar.pack(side="left")
+        plabel.pack(side="left")
         will_be_removed = []
         for record in self.database:
             jd = float(record[6])
@@ -214,26 +228,40 @@ class Database:
                     hsys="P"
                 )
             except swe.Error:
-                print("\n")
                 logging.error(
                     msg=f"Can't calculate the astrological results:\n"
                         f"\tRecord: {record}\n".expandtabs(4)
                 )
                 received += 1
                 will_be_removed.append(record)
-                progress(s=size, r=received, n=now)
+                progressbar(
+                    s=size,
+                    r=received,
+                    n=now,
+                    pframe=pframe,
+                    pbar=pbar,
+                    plabel=plabel,
+                    pstring=pstring
+                )
                 continue
             try:
                 score = result.get_all_scores()
             except KeyError:
-                print("\n")
                 logging.error(
                     msg=f"Can't calculate the score:\n"
                         f"\tRecord: {record}\n".expandtabs(4)
                 )
                 received += 1
                 will_be_removed.append(record)
-                progress(s=size, r=received, n=now)
+                progressbar(
+                    s=size,
+                    r=received,
+                    n=now,
+                    pframe=pframe,
+                    pbar=pbar,
+                    plabel=plabel,
+                    pstring=pstring
+                )
                 continue
             dayscores = np.array(
                 [v for k, v in score["sign"]["Dayscores"].items()]
@@ -253,8 +281,15 @@ class Database:
             enneagram_type = f"Type-{enneagram_type + 1}"
             record.extend([enneagram_type, enneagram_wing])
             received += 1
-            progress(s=size, r=received, n=now)
-        print("\n")
+            progressbar(
+                s=size,
+                r=received,
+                n=now,
+                pframe=pframe,
+                pbar=pbar,
+                plabel=plabel,
+                pstring=pstring
+            )
         logging.info("Completed calculating.")
         for i in will_be_removed:
             self.database.remove(i)

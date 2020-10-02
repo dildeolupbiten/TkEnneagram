@@ -3,7 +3,6 @@
 from .about import About
 from .modules import os, tk
 from .database import Database
-from .utilities import check_update
 from .user_entry_form import UserEntryForm
 from .constants import HOUSE_SYSTEMS, PLANETS
 from .selection import SingleSelection, MultipleSelection
@@ -54,8 +53,4 @@ class Menu(tk.Menu):
         self.help.add_command(
             label="About",
             command=About
-        )
-        self.help.add_command(
-            label="Update",
-            command=lambda: check_update(icons=icons)
         )
