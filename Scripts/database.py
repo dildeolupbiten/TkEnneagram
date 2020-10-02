@@ -26,21 +26,22 @@ class Database:
         
     def load_database(self, root, filename):
         if filename.endswith(".xml"):
-            self.load_adb(
+            result = self.load_adb(
                 filename=os.path.join(".", "Database", filename)
             )
         else:
-            self.load_json(
+            result = self.load_json(
                 filename=os.path.join(".", "Database", filename),
             )
-        DatabaseFrame(
-            master=root,
-            database=self.database,
-            all_categories=self.all_categories,
-            category_names=self.category_names,
-            icons=self.icons,
-            mode=self.mode
-        )
+        if result:
+            DatabaseFrame(
+                master=root,
+                database=self.database,
+                all_categories=self.all_categories,
+                category_names=self.category_names,
+                icons=self.icons,
+                mode=self.mode
+            )
 
     def choose_operation(self, root):
         if not os.path.exists("Database"):
@@ -115,13 +116,16 @@ class Database:
             logging.info(f"{len(self.database)} records are available.")
         except tk.TclError:
             return
-        self.calculate()
+        result = self.calculate()
+        if not result:
+            return
         self.group_categories()
         config = ConfigParser()
         config.read("defaults.ini")
         filename = os.path.split(filename)[-1].replace(".xml", "") + "_" +  \
             config["ALGORITHM"]["selected"].replace(".json", "") + ".json"
         self.extract_database(filename=filename)
+        return True
 
     def group_categories(self):
         logging.info(f"Started grouping categories.")
@@ -189,6 +193,7 @@ class Database:
         logging.info("Completed parsing.")
         logging.info(f"{len(self.database)} records are available.")
         self.group_categories()
+        return True
 
     def extract_database(self, filename):
         path = os.path.join(".", "Database", filename)
@@ -234,15 +239,18 @@ class Database:
                 )
                 received += 1
                 will_be_removed.append(record)
-                progressbar(
-                    s=size,
-                    r=received,
-                    n=now,
-                    pframe=pframe,
-                    pbar=pbar,
-                    plabel=plabel,
-                    pstring=pstring
-                )
+                try:
+                    progressbar(
+                        s=size,
+                        r=received,
+                        n=now,
+                        pframe=pframe,
+                        pbar=pbar,
+                        plabel=plabel,
+                        pstring=pstring
+                    )
+                except tk.TclError:
+                    return
                 continue
             try:
                 score = result.get_all_scores()
@@ -253,15 +261,18 @@ class Database:
                 )
                 received += 1
                 will_be_removed.append(record)
-                progressbar(
-                    s=size,
-                    r=received,
-                    n=now,
-                    pframe=pframe,
-                    pbar=pbar,
-                    plabel=plabel,
-                    pstring=pstring
-                )
+                try:
+                    progressbar(
+                        s=size,
+                        r=received,
+                        n=now,
+                        pframe=pframe,
+                        pbar=pbar,
+                        plabel=plabel,
+                        pstring=pstring
+                    )
+                except tk.TclError:
+                    return
                 continue
             dayscores = np.array(
                 [v for k, v in score["sign"]["Dayscores"].items()]
@@ -281,18 +292,22 @@ class Database:
             enneagram_type = f"Type-{enneagram_type + 1}"
             record.extend([enneagram_type, enneagram_wing])
             received += 1
-            progressbar(
-                s=size,
-                r=received,
-                n=now,
-                pframe=pframe,
-                pbar=pbar,
-                plabel=plabel,
-                pstring=pstring
-            )
+            try:
+                progressbar(
+                    s=size,
+                    r=received,
+                    n=now,
+                    pframe=pframe,
+                    pbar=pbar,
+                    plabel=plabel,
+                    pstring=pstring
+                )
+            except tk.TclError:
+                return
         logging.info("Completed calculating.")
         for i in will_be_removed:
             self.database.remove(i)
+        return True
 
 
 class DatabaseFrame(tk.Frame):
