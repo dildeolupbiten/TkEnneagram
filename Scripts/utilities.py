@@ -55,8 +55,7 @@ def progressbar(s, r, n, pframe, pbar, plabel, pstring):
             )
         )
     else:
-        master = pframe["master"]
-        master.destroy()
+        pframe.master.destroy()
 
 
 def convert_coordinates(coord):
