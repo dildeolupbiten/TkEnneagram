@@ -16,7 +16,6 @@ installed_packages = [
 packages = [
     "numpy",
     "geopy",
-    "Pillow",
     "python-dateutil",
     "pytz",
     "six",
