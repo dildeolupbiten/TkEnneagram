@@ -54,8 +54,7 @@ elif os.name == "nt":
 
 for package in packages:
     if package.startswith("pyswisseph"):
-        p = "pyswisseph"
-        if p not in installed_packages:
+        if "pyswisseph" not in installed_packages:
             os.system(f"{sys.executable} -m pip install {package}")
     else:
         if package not in installed_packages:
