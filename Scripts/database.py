@@ -246,7 +246,6 @@ class Database:
                         n=now,
                         pframe=pframe,
                         pbar=pbar,
-                        plabel=plabel,
                         pstring=pstring
                     )
                 except tk.TclError:
@@ -268,7 +267,6 @@ class Database:
                         n=now,
                         pframe=pframe,
                         pbar=pbar,
-                        plabel=plabel,
                         pstring=pstring
                     )
                 except tk.TclError:
@@ -299,7 +297,6 @@ class Database:
                     n=now,
                     pframe=pframe,
                     pbar=pbar,
-                    plabel=plabel,
                     pstring=pstring
                 )
             except tk.TclError:
