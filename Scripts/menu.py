@@ -36,6 +36,7 @@ class Menu(tk.Menu):
             label="Add Category",
             command=lambda: Thread(
                 target=lambda: add_category(
+                    root=self.master,
                     icons=icons
                 )
             ).start()

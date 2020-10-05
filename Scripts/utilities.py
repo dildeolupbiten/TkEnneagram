@@ -3,7 +3,8 @@
 from .messagebox import MsgBox
 from .constants import SIGNS, PLANETS, CATEGORIES, HOUSE_SYSTEMS
 from .modules import (
-    tk, os, ttk, json, time, PhotoImage, pickle, ConfigParser, askopenfilename
+    tk, os, ttk, json, time,
+    PhotoImage, pickle, ConfigParser, askopenfilename
 )
 
 
@@ -139,7 +140,7 @@ def load_defaults():
         config.write(f)
         
         
-def create_new_categories(patterns):
+def create_new_categories(patterns, adb=True):
     result = []
     for p in patterns:
         if p[0] == "Ascendant":
@@ -150,12 +151,15 @@ def create_new_categories(patterns):
         d_ = str(d).zfill(2)
         _d = str(d + 1).zfill(2)
         frmt = f"{p[0]} : {p[1]} : {d_}\u00b0 - {_d}\u00b0"
-        n = CATEGORIES[p[0]][p[1]][f"{d_} - {_d}"]
-        result.append((n, frmt))
+        if adb:
+            n = CATEGORIES[p[0]][p[1]][f"{d_} - {_d}"]
+            result.append((n, frmt))
+        else:
+            result.append(frmt)
     return result
         
         
-def add_category(icons):
+def add_category(root, icons):
     from .zodiac import Zodiac
     filename = askopenfilename(
         initialdir=".",
@@ -168,67 +172,105 @@ def add_category(icons):
         database = json.load(f)
     config = ConfigParser()
     config.read("defaults.ini")
-    size = len(database)
-    received = 0
-    now = time.time()
-    toplevel = tk.Toplevel()
-    toplevel.title("Calculating")
-    toplevel.resizable(width=False, height=False)
-    pframe = tk.Frame(master=toplevel)
-    pbar = ttk.Progressbar(
-        master=pframe,
-        orient="horizontal",
-        length=200,
-        mode="determinate"
-    )
-    pstring = tk.StringVar()
-    plabel = tk.Label(master=pframe, textvariable=pstring)
-    pframe.pack()
-    pbar.pack(side="left")
-    plabel.pack(side="left")
     error = False
-    for record in database:
-        jd = float(record[6])
-        lat = convert_coordinates(record[7])
-        lon = convert_coordinates(record[8])
-        patterns = Zodiac(
-            jd=jd, 
-            lat=lat, 
-            lon=lon,
-            hsys=HOUSE_SYSTEMS[config["HOUSE SYSTEM"]["selected"]]
-        ).patterns()[:4]
-        categories = create_new_categories(patterns=patterns)
-        if list(categories[0]) in record[-3]:
-            toplevel.destroy()
-            error = True
-            break
-        else:
-            record[-3].extend(categories)
-        received += 1
-        try:
-            progressbar(
-                s=size,
-                r=received,
-                n=now,
-                pframe=pframe,
-                pbar=pbar,
-                pstring=pstring
-            )
-        except tk.TclError:
-            return
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(database, f, ensure_ascii=False, indent=4)
-    if not error:
-        MsgBox(
-            icons=icons,
-            level="info",
-            title="Info",
-            message="Successfully added categories."
-        )
+    if os.path.split(filename)[-1].startswith("adb_export"):
+        adb = True
+        test_record = database[0]
+        jd = float(test_record[6])
+        lat = convert_coordinates(test_record[7])
+        lon = convert_coordinates(test_record[8])
     else:
-        MsgBox(
-            icons=icons,
-            level="warning",
-            title="Warning",
-            message="Categories have already been added."
+        adb = False
+        test_record = database[[k for k in database][0]]
+        jd = test_record["Julian Date"]
+        lat = test_record["Latitude"]
+        lon = test_record["Longitude"]
+    patterns = Zodiac(
+        jd=jd,
+        lat=lat,
+        lon=lon,
+        hsys=HOUSE_SYSTEMS[config["HOUSE SYSTEM"]["selected"]]
+    ).patterns()[:4]
+    categories = create_new_categories(patterns=patterns, adb=adb)
+    if adb:
+        if list(categories[0]) in test_record[-3]:
+            error = True
+    else:
+        if categories[0] in test_record["Categories"]:
+            error = True
+    if not error:
+        size = len(database)
+        received = 0
+        now = time.time()
+        toplevel = tk.Toplevel()
+        toplevel.title("Calculating")
+        toplevel.resizable(width=False, height=False)
+        pframe = tk.Frame(master=toplevel)
+        pbar = ttk.Progressbar(
+            master=pframe,
+            orient="horizontal",
+            length=200,
+            mode="determinate"
+        )
+        pstring = tk.StringVar()
+        plabel = tk.Label(master=pframe, textvariable=pstring)
+        pframe.pack()
+        pbar.pack(side="left")
+        plabel.pack(side="left")
+        for record in database:
+            if adb:
+                jd = float(record[6])
+                lat = convert_coordinates(record[7])
+                lon = convert_coordinates(record[8])
+            else:
+                jd = database[record]["Julian Date"]
+                lat = database[record]["Latitude"]
+                lon = database[record]["Longitude"]
+            patterns = Zodiac(
+                jd=jd,
+                lat=lat,
+                lon=lon,
+                hsys=HOUSE_SYSTEMS[config["HOUSE SYSTEM"]["selected"]]
+            ).patterns()[:4]
+            if adb:
+                record[-3].extend(
+                    create_new_categories(patterns=patterns, adb=adb)
+                )
+            else:
+                database[record]["Categories"].extend(
+                    create_new_categories(patterns=patterns, adb=adb)
+                )
+            received += 1
+            try:
+                progressbar(
+                    s=size,
+                    r=received,
+                    n=now,
+                    pframe=pframe,
+                    pbar=pbar,
+                    pstring=pstring
+                )
+            except tk.TclError:
+                return
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(database, f, ensure_ascii=False, indent=4)
+        root.after(
+            0,
+            lambda: MsgBox(
+                icons=icons,
+                level="info",
+                title="Info",
+                message="Successfully added categories."
+            )
+        )
+
+    else:
+        root.after(
+            0,
+            lambda: MsgBox(
+                icons=icons,
+                level="warning",
+                title="Warning",
+                message="Categories have already been added."
+            )
         )
