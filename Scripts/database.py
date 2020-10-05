@@ -6,7 +6,8 @@ from .constants import HOUSE_SYSTEMS
 from .selection import SingleSelection
 from .treeview import Treeview, TreeviewToplevel
 from .utilities import (
-    convert_coordinates, tbutton_command, check_all_command, progressbar
+    convert_coordinates, tbutton_command,
+    check_all_command, progressbar
 )
 from .modules import (
     os, dt, tk, np, ET, swe, ttk, json,
@@ -201,6 +202,8 @@ class Database:
             json.dump(self.database, file, ensure_ascii=False, indent=4)
 
     def calculate(self):
+        config = ConfigParser()
+        config.read("defaults.ini")
         logging.info("Started calculating.")
         size = len(self.database)
         received = 0
@@ -222,15 +225,12 @@ class Database:
         plabel.pack(side="left")
         will_be_removed = []
         for record in self.database:
-            jd = float(record[6])
-            lat = convert_coordinates(record[7])
-            lon = convert_coordinates(record[8])
             try:
                 result = Enneagram(
-                    jd=jd,
-                    lat=lat,
-                    lon=lon,
-                    hsys="P"
+                    jd=float(record[6]),
+                    lat=convert_coordinates(record[7]),
+                    lon=convert_coordinates(record[8]),
+                    hsys=HOUSE_SYSTEMS[config["HOUSE SYSTEM"]["selected"]]
                 )
             except swe.Error:
                 logging.error(

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from .constants import SIGNS, PLANETS
-from .modules import os, time, PhotoImage, pickle, ConfigParser
+from .messagebox import MsgBox
+from .constants import SIGNS, PLANETS, CATEGORIES, HOUSE_SYSTEMS
+from .modules import (
+    tk, os, ttk, json, time, PhotoImage, pickle, ConfigParser, askopenfilename
+)
 
 
 def convert_degree(degree):
@@ -41,7 +44,7 @@ def create_image_files(path):
     }
 
 
-def progressbar(s, r, n, pframe, pbar, plabel, pstring):
+def progressbar(s, r, n, pframe, pbar, pstring):
     if r != s:
         pbar["value"] = r
         pbar["maximum"] = s
@@ -134,3 +137,98 @@ def load_defaults():
         config["AUTH"] = {"selected": "None"}
         config["DATABASE"] = {"selected": "None"}
         config.write(f)
+        
+        
+def create_new_categories(patterns):
+    result = []
+    for p in patterns:
+        if p[0] == "Ascendant":
+            p[0] = "Asc"
+        elif p[0] == "Midheaven":
+            p[0] = "MC"
+        d = int(convert_degree(p[2])[0])
+        d_ = str(d).zfill(2)
+        _d = str(d + 1).zfill(2)
+        frmt = f"{p[0]} : {p[1]} : {d_}\u00b0 - {_d}\u00b0"
+        n = CATEGORIES[p[0]][p[1]][f"{d_} - {_d}"]
+        result.append((n, frmt))
+    return result
+        
+        
+def add_category(icons):
+    from .zodiac import Zodiac
+    filename = askopenfilename(
+        initialdir=".",
+        title="Select a JSON file",
+        filetypes=[("JSON Files", "*.json")]
+    )
+    if not filename:
+        return
+    with open(filename, encoding="utf-8") as f:
+        database = json.load(f)
+    config = ConfigParser()
+    config.read("defaults.ini")
+    size = len(database)
+    received = 0
+    now = time.time()
+    toplevel = tk.Toplevel()
+    toplevel.title("Calculating")
+    toplevel.resizable(width=False, height=False)
+    pframe = tk.Frame(master=toplevel)
+    pbar = ttk.Progressbar(
+        master=pframe,
+        orient="horizontal",
+        length=200,
+        mode="determinate"
+    )
+    pstring = tk.StringVar()
+    plabel = tk.Label(master=pframe, textvariable=pstring)
+    pframe.pack()
+    pbar.pack(side="left")
+    plabel.pack(side="left")
+    error = False
+    for record in database:
+        jd = float(record[6])
+        lat = convert_coordinates(record[7])
+        lon = convert_coordinates(record[8])
+        patterns = Zodiac(
+            jd=jd, 
+            lat=lat, 
+            lon=lon,
+            hsys=HOUSE_SYSTEMS[config["HOUSE SYSTEM"]["selected"]]
+        ).patterns()[:4]
+        categories = create_new_categories(patterns=patterns)
+        if list(categories[0]) in record[-3]:
+            toplevel.destroy()
+            error = True
+            break
+        else:
+            record[-3].extend(categories)
+        received += 1
+        try:
+            progressbar(
+                s=size,
+                r=received,
+                n=now,
+                pframe=pframe,
+                pbar=pbar,
+                pstring=pstring
+            )
+        except tk.TclError:
+            return
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(database, f, ensure_ascii=False, indent=4)
+    if not error:
+        MsgBox(
+            icons=icons,
+            level="info",
+            title="Info",
+            message="Successfully added categories."
+        )
+    else:
+        MsgBox(
+            icons=icons,
+            level="warning",
+            title="Warning",
+            message="Categories have already been added."
+        )

@@ -125,3 +125,19 @@ HOUSE_SYSTEMS = {
     "Equal": "E",
     "Whole Signs": "W"
 }
+
+CATEGORIES = {
+    p: {
+        s: {
+            f"{str(i).zfill(2)} - {str(i + 1).zfill(2)}": (
+                p_index + 
+                s_index + 
+                i + 
+                10000 + 
+                (30 * s_index) + 
+                (360 * p_index)
+            )
+            for i in range(30)
+        } for s_index, s in enumerate(SIGNS)
+    } for p_index, p in enumerate(PLANETS) if p in ["Sun", "Moon", "Asc", "MC"]
+}

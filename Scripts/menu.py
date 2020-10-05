@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from .about import About
-from .modules import os, tk
 from .database import Database
+from .modules import os, tk, Thread
+from .utilities import add_category
 from .user_entry_form import UserEntryForm
 from .constants import HOUSE_SYSTEMS, PLANETS
 from .selection import SingleSelection, MultipleSelection
@@ -12,13 +13,8 @@ class Menu(tk.Menu):
     def __init__(self, icons, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.master.configure(menu=self)
-        self.add_command(
-            label="Database",
-            command=lambda: Database(
-                root=self.master,
-                icons=icons
-            )
-        )
+        self.database = tk.Menu(master=self, tearoff=False)
+        self.add_cascade(label="Database", menu=self.database)
         self.add_command(
             label="User Entry",
             command=lambda: UserEntryForm(
@@ -29,6 +25,21 @@ class Menu(tk.Menu):
         self.add_cascade(label="Select", menu=self.select)
         self.help = tk.Menu(master=self, tearoff=False)
         self.add_cascade(label="Help", menu=self.help)
+        self.database.add_command(
+            label="Open",
+            command=lambda: Database(
+                root=self.master,
+                icons=icons
+            )        
+        )
+        self.database.add_command(
+            label="Add Category",
+            command=lambda: Thread(
+                target=lambda: add_category(
+                    icons=icons
+                )
+            ).start()
+        )        
         self.select.add_command(
             label="House System",
             command=lambda: SingleSelection(
