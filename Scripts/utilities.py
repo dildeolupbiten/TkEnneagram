@@ -173,7 +173,7 @@ def add_category(root, icons):
     config = ConfigParser()
     config.read("defaults.ini")
     error = False
-    if os.path.split(filename)[-1].startswith("adb_export"):
+    if isinstance(database, list):
         adb = True
         test_record = database[0]
         jd = float(test_record[6])
@@ -218,7 +218,7 @@ def add_category(root, icons):
         pbar.pack(side="left")
         plabel.pack(side="left")
         for record in database:
-            if adb:
+            if isinstance(database, list):
                 jd = float(record[6])
                 lat = convert_coordinates(record[7])
                 lon = convert_coordinates(record[8])
@@ -232,7 +232,7 @@ def add_category(root, icons):
                 lon=lon,
                 hsys=HOUSE_SYSTEMS[config["HOUSE SYSTEM"]["selected"]]
             ).patterns()[:4]
-            if adb:
+            if isinstance(database, list):
                 record[-3].extend(
                     create_new_categories(patterns=patterns, adb=adb)
                 )
