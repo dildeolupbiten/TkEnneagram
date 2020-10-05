@@ -140,7 +140,7 @@ def load_defaults():
         config.write(f)
         
         
-def create_new_categories(patterns, adb=True):
+def create_new_categories(patterns, adb):
     result = []
     for p in patterns:
         if p[0] == "Ascendant":
