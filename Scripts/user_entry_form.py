@@ -153,6 +153,11 @@ class UserEntryForm(tk.Toplevel):
         self.entries["Longitude"].delete("0", "end")
         self.entries["Latitude"].insert("insert", lat)
         self.entries["Longitude"].insert("insert", lon)
+        for i in ("Latitude", "Longitude"):
+            self.style.configure(
+                self.entries[i].cget("style"),
+                fieldbackground="white"
+            )
 
     def control(self, widget):
         if widget.get():
