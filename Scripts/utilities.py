@@ -263,7 +263,6 @@ def add_category(root, icons):
                 message="Successfully added categories."
             )
         )
-
     else:
         root.after(
             0,
