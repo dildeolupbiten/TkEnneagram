@@ -4,7 +4,7 @@ from .messagebox import MsgBox
 from .enneagram import Enneagram
 from .constants import HOUSE_SYSTEMS
 from .treeview import TreeviewToplevel
-from .modules import tk, ttk, ConfigParser, Nominatim
+from .modules import dt, tk, ttk, ConfigParser, Nominatim
 
 
 class UserEntryForm(tk.Toplevel):
@@ -80,12 +80,24 @@ class UserEntryForm(tk.Toplevel):
                                     widget=widget
                                 )
                             )
+                            entry.bind(
+                                sequence="<KeyRelease>",
+                                func=lambda event, widget=entry: self.control(
+                                    widget=widget
+                                )
+                            )
                         else:
                             width = 10
                             entry = ttk.Entry(
                                 master=sub_frame,
                                 width=width,
                                 style=f"{m}.TEntry",
+                            )
+                            entry.bind(
+                                sequence="<KeyRelease>",
+                                func=lambda event, widget=entry: self.max_char(
+                                    widget=widget
+                                )
                             )
                     entry.pack()
                     self.entries[m] = entry
@@ -149,9 +161,10 @@ class UserEntryForm(tk.Toplevel):
                 fieldbackground="white"
             )
 
-    def max_char(self, widget, limit):
-        if len(widget.get()) > limit:
-            widget.delete(str(limit))
+    def max_char(self, widget, limit=0):
+        if limit:
+            if len(widget.get()) > limit:
+                widget.delete(str(limit))
         if widget.get():
             try:
                 float(widget.get())
@@ -176,26 +189,60 @@ class UserEntryForm(tk.Toplevel):
         algorithm = config["ALGORITHM"]["selected"]
         hsys = HOUSE_SYSTEMS[config["HOUSE SYSTEM"]["selected"]]
         for k, v in self.entries.items():
-            if not v.get():
-                if isinstance(v, ttk.Entry):
-                    self.style.configure(
-                        v.cget("style"),
-                        fieldbackground="red"
-                    )
-
-        if all(v.get() for k, v in self.entries.items() if k != "Place"):
-            user = Enneagram(
-                year=int(self.entries["Year"].get()),
-                month=int(self.entries["Month"].get()),
-                day=int(self.entries["Day"].get()),
-                hour=int(self.entries["Hour"].get()),
-                minute=int(self.entries["Minute"].get()),
-                second=0,
-                lat=float(self.entries["Latitude"].get()),
-                lon=float(self.entries["Longitude"].get()),
-                hsys=hsys,
+            if k != "Place":
+                if not v.get():
+                    if isinstance(v, ttk.Entry):
+                        self.style.configure(
+                            v.cget("style"),
+                            fieldbackground="red"
+                        )
+        for k, v in self.entries.items():
+            if k in [
+                "Day", "Month", "Year", "Hour",
+                "Minute", "Latitude", "Longitude"
+            ]:
+                if not self.check(k):
+                    return
+        try:
+            dt.strptime(
+                f'{int(self.entries["Year"].get())}.'
+                f'{int(self.entries["Month"].get())}.'
+                f'{int(self.entries["Day"].get())} '
+                f'{int(self.entries["Hour"].get())}:'
+                f'{int(self.entries["Minute"].get())}',
+                "%Y.%m.%d %H:%M"
+            )
+        except:
+            MsgBox(
+                title="warning",
+                message="You didn't fill the datetime correctly.",
+                level="warning",
                 icons=self.icons
             )
+            return
+        if all(v.get() for k, v in self.entries.items() if k != "Place"):
+            try:
+                user = Enneagram(
+                    year=int(self.entries["Year"].get()),
+                    month=int(self.entries["Month"].get()),
+                    day=int(self.entries["Day"].get()),
+                    hour=int(self.entries["Hour"].get()),
+                    minute=int(self.entries["Minute"].get()),
+                    second=0,
+                    lat=float(self.entries["Latitude"].get()),
+                    lon=float(self.entries["Longitude"].get()),
+                    hsys=hsys,
+                    icons=self.icons
+                )
+            except ValueError:
+                MsgBox(
+                    title="warning",
+                    message="The coordinates should be given \nin degrees. "
+                            "\nThey are out ouf bounds.",
+                    level="warning",
+                    icons=self.icons
+                )
+                return
             info = {k: v for k, v in self.entries.items() if k != "Place"}
             info = {
                 "Name": info["Name"].get(),
@@ -232,3 +279,16 @@ class UserEntryForm(tk.Toplevel):
                 level="warning",
                 icons=self.icons
             )
+
+    def check(self, name):
+        try:
+            float(self.entries[name].get())
+            return True
+        except ValueError:
+            MsgBox(
+                title="warning",
+                message=f"You didn't fill the {name.lower()} correctly.",
+                level="warning",
+                icons=self.icons
+            )
+            return
