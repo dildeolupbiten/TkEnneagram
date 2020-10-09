@@ -55,7 +55,7 @@ class Treeview(ttk.Treeview):
         self.configure(
             show="headings",
             columns=[f"#{i + 1}" for i in range(len(self.columns))],
-            height=20,
+            height=10,
             selectmode="extended"
         )
         self.pack(side="left", expand=True, fill="both")

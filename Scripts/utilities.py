@@ -3,9 +3,22 @@
 from .messagebox import MsgBox
 from .constants import SIGNS, PLANETS, CATEGORIES, HOUSE_SYSTEMS
 from .modules import (
-    tk, os, ttk, json, time,
+    dt, tk, os, ttk, json, time,
     PhotoImage, pickle, ConfigParser, askopenfilename
 )
+
+
+def load_database(filename, i=0):
+    with open(filename, encoding="utf-8") as f:
+        data = json.load(f)
+        if isinstance(data, dict):
+            return {
+                k: v
+                for index, (k, v) in enumerate(data.items())
+                if index >= i
+            }
+        else:
+            return data
 
 
 def convert_degree(degree):
@@ -168,19 +181,25 @@ def add_category(root, icons):
     )
     if not filename:
         return
-    with open(filename, encoding="utf-8") as f:
-        database = json.load(f)
+    database = load_database(filename=filename)
     config = ConfigParser()
     config.read("defaults.ini")
     error = False
     if isinstance(database, list):
         adb = True
+        date_of_creation = False
         test_record = database[0]
         jd = float(test_record[6])
         lat = convert_coordinates(test_record[7])
         lon = convert_coordinates(test_record[8])
     else:
         adb = False
+        date_of_creation = database["Date of Creation"]
+        database = {
+            k: v
+            for index, (k, v) in enumerate(database.items())
+            if index > 1
+        }
         test_record = database[[k for k in database][0]]
         jd = test_record["Julian Date"]
         lat = test_record["Latitude"]
@@ -237,9 +256,18 @@ def add_category(root, icons):
                     create_new_categories(patterns=patterns, adb=adb)
                 )
             else:
-                database[record]["Categories"].extend(
-                    create_new_categories(patterns=patterns, adb=adb)
-                )
+                try:
+                    database[record]["Categories"].extend(
+                        create_new_categories(patterns=patterns, adb=adb)
+                    )
+                except AttributeError:
+                    database[record]["Categories"] = create_new_categories(
+                        patterns=patterns,
+                        adb=adb
+                    )
+                database[record]["Update Time"] = dt.utcnow().strftime(
+                    "%d.%m.%Y %H:%M:%S"
+                ) + " UTC"
             received += 1
             try:
                 progressbar(
@@ -252,6 +280,15 @@ def add_category(root, icons):
                 )
             except tk.TclError:
                 return
+        if not adb:
+            new = {
+                "Date of Creation": date_of_creation,
+                "Last Modified": dt.utcnow().strftime(
+                    "%d.%m.%Y %H:%M:%S"
+                ) + " UTC"
+            }
+            new.update(database)
+            database = new
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(database, f, ensure_ascii=False, indent=4)
         root.after(
@@ -273,3 +310,17 @@ def add_category(root, icons):
                 message="Categories have already been added."
             )
         )
+
+
+def key_value(key, value):
+    v1 = [key]
+    v2 = [
+        v for k, v in value.items()
+        if k not in ["Categories", "Notes", "Access Time", "Update Time"]
+    ]
+    v3 = [
+        {i: j for i, j in enumerate(value["Categories"], 1)}
+        if value["Categories"] else None
+    ]
+    v4 = [value["Access Time"], value["Update Time"]]
+    return v1 + v2 + v3 + v4
