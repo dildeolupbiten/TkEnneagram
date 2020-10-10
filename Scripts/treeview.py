@@ -11,6 +11,7 @@ class Treeview(ttk.Treeview):
     def __init__(
             self,
             columns,
+            wide,
             values=None,
             *args,
             **kwargs
@@ -55,7 +56,7 @@ class Treeview(ttk.Treeview):
         self.configure(
             show="headings",
             columns=[f"#{i + 1}" for i in range(len(self.columns))],
-            height=10,
+            height=10 if not wide else 20,
             selectmode="extended"
         )
         self.pack(side="left", expand=True, fill="both")
@@ -161,6 +162,7 @@ class TreeviewToplevel(tk.Toplevel):
             icons,
             patterns,
             algorithm,
+            wide=False,
             *args,
             **kwargs
     ):
@@ -182,6 +184,7 @@ class TreeviewToplevel(tk.Toplevel):
         self.treeview = Treeview(
             master=self.treeview_frame,
             values=values,
+            wide=wide,
             columns=self.columns,
         )
         self.button = tk.Button(

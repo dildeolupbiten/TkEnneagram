@@ -363,7 +363,8 @@ class DatabaseFrame(tk.Frame):
         self.treeview = Treeview(
             master=self.midframe,
             columns=self.columns,
-            height=5
+            height=5,
+            wide=False
         )
         self.treeview.bind(
             sequence="<Button-1>",
@@ -765,7 +766,8 @@ class DatabaseFrame(tk.Frame):
                 hsys=hsys,
                 icons=self.icons,
                 patterns=user.patterns,
-                algorithm=algorithm
+                algorithm=algorithm,
+                wide=True
             )
 
     def button_3_remove(self):
