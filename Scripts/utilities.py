@@ -3,8 +3,8 @@
 from .messagebox import MsgBox
 from .constants import SIGNS, PLANETS, CATEGORIES, HOUSE_SYSTEMS
 from .modules import (
-    dt, tk, os, ttk, json, time,
-    PhotoImage, pickle, ConfigParser, askopenfilename
+    dt, tk, os, ttk, json, time, Popen, SIGKILL, urlopen,
+    URLError, PhotoImage, pickle, ConfigParser, askopenfilename
 )
 
 
@@ -324,3 +324,66 @@ def key_value(key, value):
     ]
     v4 = [value["Access Time"], value["Update Time"]]
     return v1 + v2 + v3 + v4
+
+
+def check_update(icons):
+    try:
+        scripts = json.load(
+            urlopen(
+                url=f"https://api.github.com/repos/dildeolupbiten/"
+                    f"TkEnneagram/contents/Scripts?ref=master"
+            )
+        )
+    except URLError:
+        MsgBox(
+            title="Warning",
+            message="Couldn't connect.",
+            level="warning",
+            icons=icons
+        )
+        return
+    for i in scripts:
+        try:
+            file = urlopen(i["download_url"]).read().decode()
+        except URLError:
+            MsgBox(
+                title="Warning",
+                message="Couldn't connect.",
+                level="warning",
+                icons=icons
+            )
+            return
+        if i["name"] not in os.listdir("Scripts"):
+            update = True
+            with open(f"Scripts/{i['name']}", "w", encoding="utf-8") as f:
+                f.write(file)
+        else:
+            with open(f"Scripts/{i['name']}", "r", encoding="utf-8") as f:
+                if file != f.read():
+                    update = True
+                    with open(
+                            f"Scripts/{i['name']}",
+                            "w",
+                            encoding="utf-8"
+                    ) as g:
+                        g.write(file)
+    if update:
+        MsgBox(
+            title="Info",
+            message="Program is updated.",
+            level="info",
+            icons=icons
+        )
+        if os.name == "posix":
+            Popen(["python3", "run.py"])
+            os.kill(os.getpid(), SIGKILL)
+        elif os.name == "nt":
+            Popen(["python", "run.py"])
+            os.system(f"TASKKILL /F /PID {os.getpid()}")
+    else:
+        MsgBox(
+            title="Info",
+            message="Program is up-to-date.",
+            level="info",
+            icons=icons
+        )

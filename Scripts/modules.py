@@ -12,9 +12,13 @@ import xml.etree.ElementTree as ET
 
 from dateutil import tz
 from pytz import timezone
+from signal import SIGKILL
+from subprocess import Popen
 from threading import Thread
 from webbrowser import open_new
 from xlsxwriter import Workbook
+from urllib.error import URLError
+from urllib.request import urlopen
 from tkinter import ttk, PhotoImage
 from datetime import datetime as dt
 from geopy.geocoders import Nominatim
