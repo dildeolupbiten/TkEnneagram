@@ -20,18 +20,7 @@ class Treeview(ttk.Treeview):
         self.columns = columns
         if values:
             self.style = ttk.Style()
-            self.style.map(
-                "Treeview",
-                background=[("selected", "#00b4a7")],
-                foreground=[("selected", "#000000")]
-            )
-            self.style.configure("Treeview.Heading", background="#ffffff")
             self.style.configure("Treeeview.Cell", fieldbackground="red")
-            self.style.map(
-                "Treeview.Heading",
-                background=[("active", "#00b4a7")],
-                foreground=[("active", "#000000")]
-            )
         else:
             self.x_scrollbar = tk.Scrollbar(
                 master=self.master,
