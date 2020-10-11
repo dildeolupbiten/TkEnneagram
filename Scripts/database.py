@@ -287,11 +287,18 @@ class Database:
             enneagram_type = s.index(max(s))
             try:
                 right = s[enneagram_type + 1]
+                rindex = enneagram_type + 1
             except IndexError:
                 right = s[0]
-            left = s[enneagram_type - 1]
-            enneagram_wing = right if right > left else left
-            enneagram_wing = f"Type-{s.index(enneagram_wing) + 1}"
+                rindex = 0
+            if enneagram_type == 0:
+                left = s[-1]
+                lindex = 8
+            else:
+                left = s[enneagram_type - 1]
+                lindex = enneagram_type - 1
+            enneagram_wing = rindex if right > left else lindex
+            enneagram_wing = f"Type-{enneagram_wing + 1}"
             enneagram_type = f"Type-{enneagram_type + 1}"
             record.extend([enneagram_type, enneagram_wing])
             received += 1

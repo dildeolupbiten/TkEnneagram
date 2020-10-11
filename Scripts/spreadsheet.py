@@ -21,12 +21,24 @@ class Spreadsheet(Workbook):
             "G", "H", "I",
             "J", "K", "L",
             "M", "N", "O",
-            "P", "Q", "R"
+            "P", "Q", "R",
+            "S", "T", "U"
         ]
-        self.columns = ["Category"] + \
-                       [f"Type-{i}" for i in range(1, 10)] + \
-                       ["Total"]
-        self.write(data=data, info=info, hsys=hsys, algorithm=algorithm)
+        if algorithm:
+            self.columns = ["Category"] + \
+                           [f"Type-{i}" for i in range(1, 10)] + \
+                           ["Total"]
+            self.write_normal(
+                data=data,
+                info=info,
+                hsys=hsys,
+                algorithm=algorithm
+            )
+        else:
+            self.write_category(
+                data=data,
+                info=info
+            )
         self.close()
 
     def format(
@@ -48,7 +60,7 @@ class Spreadsheet(Workbook):
             }
         )
 
-    def write(self, data, info, hsys, algorithm):
+    def write_normal(self, data, info, hsys, algorithm):
         self.sheet.merge_range(
             "A1:B1",
             "Algorithm",
@@ -158,3 +170,92 @@ class Spreadsheet(Workbook):
                             self.format(align="center")
                         )
                 n += 1
+
+    def write_category(self, info, data):
+        for index, (k, v) in enumerate(info.items(), 1):
+            if index < 7:
+                self.sheet.merge_range(
+                    f"A{index}:B{index}",
+                    k,
+                    self.format(bold=True)
+                )
+                self.sheet.write(
+                    f"C{index}",
+                    v,
+                    self.format(bold=False, align="left")
+                )
+            else:
+                self.sheet.merge_range(
+                    f"D{index - 6}:E{index - 6}",
+                    k,
+                    self.format(bold=True)
+                )
+                self.sheet.merge_range(
+                    f"F{index - 6}:J{index - 6}",
+                    v,
+                    self.format(bold=False, align="left")
+                )
+        self.sheet.merge_range(
+            "A8:J8",
+            "Enneagram Distribution",
+            self.format(bold=True, align="center")
+        )
+        values = []
+        for index, (k, v) in enumerate(data[0].items()):
+            self.sheet.write(
+                f"{self.cols[index]}9",
+                k,
+                self.format(bold=True, align="center")
+            )
+            self.sheet.write(
+                f"{self.cols[index]}10",
+                v,
+                self.format(bold=False, align="center")
+            )
+            values.append(v)
+        self.sheet.write(
+            "J9",
+            "Total",
+            self.format(bold=True, align="center")
+        )
+        self.sheet.write(
+            "J10",
+            sum(values),
+            self.format(bold=False, align="center")
+        )
+        self.sheet.merge_range(
+            "A12:S12",
+            "Enneagram Wing Distribution",
+            self.format(bold=True, align="center")
+        )
+        values = []
+        column = 0
+        for index, (key, value) in enumerate(data[1].items()):
+            self.sheet.merge_range(
+                f"{self.cols[column]}13:{self.cols[column + 1]}13",
+                key,
+                self.format(bold=True, align="center")
+            )
+            for i, (k, v) in enumerate(value.items()):
+                self.sheet.write(
+                    f"{self.cols[column]}14",
+                    k,
+                    self.format(bold=True, align="center")
+                )
+                self.sheet.write(
+                    f"{self.cols[column]}15",
+                    v,
+                    self.format(align="center")
+                )
+                values.append(v)
+                column += 1
+        self.sheet.merge_range(
+            "S13:S14",
+            "Total",
+            self.format(bold=True, align="center")
+        )
+        self.sheet.write(
+            "S15",
+            sum(values),
+            self.format(bold=False, align="center")
+        )
