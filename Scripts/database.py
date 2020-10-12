@@ -704,6 +704,7 @@ class DatabaseFrame(tk.Frame):
                 index=index,
                 parent="",
                 values=i.replace(" ", "\ "),
+                tag=index
             )
         var = tk.StringVar()
         var.set("Selected = 0")
@@ -739,12 +740,12 @@ class DatabaseFrame(tk.Frame):
         selection = widget.selection()
         for i in selection:
             item = widget.item(i)["values"][0]
-            widget.item(i, tags="selected")
+            tag = widget.item(i)["tags"][0]
             if mode == "add" and item not in added:
-                widget.tag_configure("selected", foreground="red")
+                widget.tag_configure(tag, foreground="red")
                 added.append(item)
             elif mode == "remove" and item in added:
-                widget.tag_configure("selected", foreground="black")
+                widget.tag_configure(tag, foreground="black")
                 added.remove(item)
         var.set(f"Selected = {len(added)}")
 
