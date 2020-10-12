@@ -13,6 +13,9 @@ class Treeview(ttk.Treeview):
             columns,
             wide,
             values=None,
+            width=None,
+            anchor=None,
+            x_scrollbar=None,
             *args,
             **kwargs
     ):
@@ -21,7 +24,7 @@ class Treeview(ttk.Treeview):
         if values:
             self.style = ttk.Style()
             self.style.configure("Treeeview.Cell", fieldbackground="red")
-        else:
+        if x_scrollbar:
             self.x_scrollbar = tk.Scrollbar(
                 master=self.master,
                 orient="horizontal"
@@ -58,8 +61,14 @@ class Treeview(ttk.Treeview):
                     width = 75
                     anchor = "center"
             else:
-                width = 125
-                anchor = "center"
+                if width:
+                    width = width
+                else:
+                    width = 125
+                if anchor:
+                    anchor = anchor
+                else:
+                    anchor = "center"
             self.column(
                 column=f"#{index + 1}",
                 minwidth=75,
