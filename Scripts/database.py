@@ -372,8 +372,7 @@ class DatabaseFrame(tk.Frame):
         self.treeview = Treeview(
             master=self.midframe,
             columns=self.columns,
-            height=5,
-            wide=False
+            height=5
         )
         self.treeview.bind(
             sequence="<Button-1>",
@@ -694,7 +693,6 @@ class DatabaseFrame(tk.Frame):
         treeview = Treeview(
             master=frame,
             columns=["Categories"],
-            wide=False,
             width=400,
             anchor="w"
         )
@@ -708,7 +706,7 @@ class DatabaseFrame(tk.Frame):
         button = tk.Button(
             master=toplevel,
             text="Apply",
-            command=lambda: self.select_cat(
+            command=lambda: self.apply_selection(
                 treeview=treeview,
                 toplevel=toplevel
             )
@@ -743,7 +741,7 @@ class DatabaseFrame(tk.Frame):
                 )
                 break
 
-    def select_cat(self, treeview, toplevel):
+    def apply_selection(self, treeview, toplevel):
         selected = treeview.selection()
         if not selected:
             pass

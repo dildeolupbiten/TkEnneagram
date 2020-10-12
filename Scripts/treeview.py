@@ -11,7 +11,7 @@ class Treeview(ttk.Treeview):
     def __init__(
             self,
             columns,
-            wide,
+            wide=None,
             values=None,
             width=None,
             anchor=None,
@@ -160,7 +160,7 @@ class TreeviewToplevel(tk.Toplevel):
             icons,
             patterns,
             algorithm,
-            wide=False,
+            wide=None,
             *args,
             **kwargs
     ):
@@ -177,8 +177,8 @@ class TreeviewToplevel(tk.Toplevel):
         self.treeview_frame = tk.Frame(master=self)
         self.treeview_frame.pack(fill="both")
         self.columns = ["Category"] + \
-                       [f"Type-{i}" for i in range(1, 10)] + \
-                       ["Total"]
+            [f"Type-{i}" for i in range(1, 10)] + \
+            ["Total"]
         self.treeview = Treeview(
             master=self.treeview_frame,
             values=values,
