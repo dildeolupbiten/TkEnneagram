@@ -49,12 +49,10 @@ def dms_to_dd(dms):
 def create_image_files(path):
     return {
         i[:-4]: {
-            "path": os.path.join(os.getcwd(), path, i),
             "img": PhotoImage(
                 file=os.path.join(os.getcwd(), path, i)
             )
-        }
-        for i in sorted(os.listdir(os.path.join(os.getcwd(), path)))
+        } for i in sorted(os.listdir(os.path.join(os.getcwd(), path)))
     }
 
 
