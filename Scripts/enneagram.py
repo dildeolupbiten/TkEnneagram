@@ -46,7 +46,7 @@ class Enneagram:
             else:
                 self.scores = auth(
                     icons=self.icons, 
-                    config_key=config["AUTH"]["key"]
+                    config_key=config["AUTH"]["selected"]
                 )
                 if self.scores:
                     pass
