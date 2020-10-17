@@ -62,7 +62,7 @@ for package in packages:
         if "pyswisseph" not in installed_packages:
             os.system(f"{sys.executable} -m pip install {package}")
     else:
-        if package not in installed_packages:
+        if package.split("==")[0] not in installed_packages:
             os.system(f"{sys.executable} -m pip install {package}")
            
 if __name__ == "__main__":
