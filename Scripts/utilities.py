@@ -3,7 +3,7 @@
 from .messagebox import MsgBox
 from .constants import SIGNS, PLANETS, CATEGORIES, HOUSE_SYSTEMS
 from .modules import (
-    dt, tk, os, ttk, json, time, Popen, SIGKILL, urlopen,
+    dt, tk, os, ttk, json, time, Popen, urlopen,
     URLError, PhotoImage, pickle, ConfigParser, askopenfilename
 )
 
@@ -375,7 +375,7 @@ def check_update(icons):
         )
         if os.name == "posix":
             Popen(["python3", "run.py"])
-            os.kill(os.getpid(), SIGKILL)
+            os.kill(os.getpid(), __import__("signal").SIGKILL)
         elif os.name == "nt":
             Popen(["python", "run.py"])
             os.system(f"TASKKILL /F /PID {os.getpid()}")

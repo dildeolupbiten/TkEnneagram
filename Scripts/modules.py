@@ -12,7 +12,6 @@ import xml.etree.ElementTree as ET
 
 from dateutil import tz
 from pytz import timezone
-from signal import SIGKILL
 from subprocess import Popen
 from threading import Thread
 from webbrowser import open_new
