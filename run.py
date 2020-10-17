@@ -14,8 +14,8 @@ installed_packages = [
 ]
 
 packages = [
-    "numpy",
-    "geopy",
+    "numpy==1.19.2",
+    "geopy==2.0.0",
     "python-dateutil",
     "pytz",
     "six",
@@ -51,6 +51,11 @@ elif os.name == "nt":
                 call(p=path, n=4)
             elif platform.architecture()[0] == "64bit":
                 call(p=path, n=5)
+        elif sys.version_info.minor == 9:
+            if platform.architecture()[0] == "32bit":
+                call(p=path, n=6)
+            elif platform.architecture()[0] == "64bit":
+                call(p=path, n=7)
 
 for package in packages:
     if package.startswith("pyswisseph"):
