@@ -396,7 +396,6 @@ class DatabaseFrame(tk.Frame):
             master=self.entry_button_frame,
             treeview=self.treeview,
             database=self.database,
-            displayed_results=self.displayed_results,
             info_var=self.info_var
         )
         self.category_label = tk.Label(
@@ -866,7 +865,7 @@ class DatabaseFrame(tk.Frame):
                     if j[0] == self.treeview.item(i)["values"][0]:
                         self.displayed_results.remove(j)
                 self.treeview.delete(i)
-            self.info_var.set(len(self.displayed_results))
+            self.info_var.set(len(self.treeview.get_children()))
 
     def button_3_open_url(self):
         selected = self.treeview.selection()
