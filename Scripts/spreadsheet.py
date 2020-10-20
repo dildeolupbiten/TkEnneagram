@@ -172,6 +172,7 @@ class Spreadsheet(Workbook):
                 n += 1
 
     def write_category(self, info, data):
+        row = 9
         for index, (k, v) in enumerate(info.items(), 1):
             if index < 7:
                 self.sheet.merge_range(
@@ -196,35 +197,35 @@ class Spreadsheet(Workbook):
                     self.format(bold=False, align="left")
                 )
         self.sheet.merge_range(
-            "A8:J8",
+            f"A{row}:J{row}",
             "Enneagram Distribution",
             self.format(bold=True, align="center")
         )
         values = []
         for index, (k, v) in enumerate(data[0].items()):
             self.sheet.write(
-                f"{self.cols[index]}9",
+                f"{self.cols[index]}{row + 1}",
                 k,
                 self.format(bold=True, align="center")
             )
             self.sheet.write(
-                f"{self.cols[index]}10",
+                f"{self.cols[index]}{row + 2}",
                 v,
                 self.format(bold=False, align="center")
             )
             values.append(v)
         self.sheet.write(
-            "J9",
+            f"J{row + 1}",
             "Total",
             self.format(bold=True, align="center")
         )
         self.sheet.write(
-            "J10",
+            f"J{row + 2}",
             sum(values),
             self.format(bold=False, align="center")
         )
         self.sheet.merge_range(
-            "A12:S12",
+            f"A{row + 4}:S{row + 4}",
             "Enneagram Wing Distribution",
             self.format(bold=True, align="center")
         )
@@ -232,30 +233,31 @@ class Spreadsheet(Workbook):
         column = 0
         for index, (key, value) in enumerate(data[1].items()):
             self.sheet.merge_range(
-                f"{self.cols[column]}13:{self.cols[column + 1]}13",
+                f"{self.cols[column]}{row + 5}:"
+                f"{self.cols[column + 1]}{row + 5}",
                 key,
                 self.format(bold=True, align="center")
             )
             for i, (k, v) in enumerate(value.items()):
                 self.sheet.write(
-                    f"{self.cols[column]}14",
+                    f"{self.cols[column]}{row + 6}",
                     k,
                     self.format(bold=True, align="center")
                 )
                 self.sheet.write(
-                    f"{self.cols[column]}15",
+                    f"{self.cols[column]}{row + 7}",
                     v,
                     self.format(align="center")
                 )
                 values.append(v)
                 column += 1
         self.sheet.merge_range(
-            "S13:S14",
+            f"S{row + 5}:S{row + 6}",
             "Total",
             self.format(bold=True, align="center")
         )
         self.sheet.write(
-            "S15",
+            f"S{row + 7}",
             sum(values),
             self.format(bold=False, align="center")
         )

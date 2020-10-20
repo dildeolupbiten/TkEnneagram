@@ -148,6 +148,7 @@ def load_defaults():
         config["ALGORITHM"] = {"selected": "2010_Algorithm_Placidus.json"}
         config["AUTH"] = {"selected": "None"}
         config["DATABASE"] = {"selected": "None"}
+        config["CATEGORY SELECTION"] = {"selected": "Basic"}
         config.write(f)
         
         

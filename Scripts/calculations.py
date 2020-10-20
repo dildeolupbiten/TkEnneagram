@@ -73,17 +73,19 @@ def apply_year_range(
 def find_observed_values(widget, icons):
     displayed_results = []
     selected_categories = []
+    ignored_categories = []
     selected_ratings = []
     checkbuttons = {}
     mode = ""
     for i in widget.winfo_children():
-        if hasattr(i, "displayed_results"):
+        if hasattr(i, "included"):
             mode += i.mode
             displayed_results += [
                 i.treeview.item(j)["values"]
                 for j in i.treeview.get_children()
             ]
-            selected_categories += i.selected_categories
+            selected_categories += i.included
+            ignored_categories += i.ignored
             selected_ratings += i.selected_ratings
             checkbuttons.update(i.checkbuttons)
             break
@@ -101,6 +103,14 @@ def find_observed_values(widget, icons):
                 .replace(", ", "_-_")
         else:
             selected_categories = "Special"
+    if ignored_categories:
+        if len(ignored_categories) > 1:
+            ignored_categories = f"Totally {len(ignored_categories)} " \
+                                 f"categories are ignored."
+        else:
+            ignored_categories = f"{ignored_categories[0]} is ignored."
+    else:
+        ignored_categories = "No category is ignored."
     if selected_ratings:
         selected_ratings = "+".join(selected_ratings)
     else:
@@ -126,7 +136,8 @@ def find_observed_values(widget, icons):
             .replace(".json", "").replace(".xml", ""),
             "House System": config["HOUSE SYSTEM"]["selected"],
             "Rodden Rating": selected_ratings,
-            "Category": selected_categories
+            "Category": selected_categories,
+            "Ignored": ignored_categories
         }
     )
     path = os.path.join(
