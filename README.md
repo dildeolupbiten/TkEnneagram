@@ -38,7 +38,7 @@ In order to run **TkEnneagram**, at least [Python](https://www.python.org/)'s 3.
 
 ![img3](https://user-images.githubusercontent.com/29302909/96887895-b2f0c580-148d-11eb-91ae-d730a4735fe1.png)
 
-Users could move many databases to the **Database** folder and select the database you want to work with. The above window is only destroyed when the users press the **Apply** button.
+Users could move many databases to the **Database** folder and select the database they want to work with. The above window is only destroyed when the users press the **Apply** button.
 
 After pressed the **Apply** button, the Enneagram types of the records would be calculated and these types would be added as the new items of the records. 
 
