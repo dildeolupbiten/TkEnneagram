@@ -46,7 +46,7 @@ After pressed the **Apply** button, the Enneagram types of the records would be 
 
 After the calculation is completed, a JSON file would be created in the **Database** folder. The filename would include the name of the XML file + the algorithm that is used. For example, if the name of the XML file is **adb_export_200814_1910.xml** and the name of the used algorithm is **2010_Algorithm_Placidus.json**, the name of the derived database would be **adb_export_200814_1910_2010_Algorithm_Placidus.json**. And users could select this file. Also users could use this file with [TkAstroDb](https://github.com/dildeolupbiten/TkAstroDb). If users select this JSON file instead the XML file, the calculation would no longer be done again. That's why it's recommended that users would load this derived database to the program after it's created.
 
-**4.** A new frame should cover the main window as below in a few seconds after pressed the calculation is completed.
+**4.** A new frame should cover the main window as below in a few seconds after the calculation is completed.
 
 ![img5](https://user-images.githubusercontent.com/29302909/96915097-8600da80-14ae-11eb-9888-520e66c8d08e.png)
 
