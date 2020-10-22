@@ -74,7 +74,7 @@ Also, users could export the result into a spreadsheet file via using the **Expo
 
 ![img10](https://user-images.githubusercontent.com/29302909/96892541-68257c80-1492-11eb-904e-f79b9cc9bf21.png)
 
-Users could search a category by writing somethings to the search entry. If the characters that users typed match with the characters of the categories in the category list, the horizontal scrollbar would move to the category that contains the characters. And if users press the **Enter** key, the program would move to the positions of other categories that contain the characters.
+Users could search a category by writing somethings to the search entry. If the characters that users typed match with the characters of the categories in the category list, the horizontal scrollbar would move to the position of the category that contains the characters. And if users press the **Enter** key, the program would move to the position of the next category that contains the characters.
 
 In order to select a category, users should use the right-click of the mause and select the **Add** option. The color of the added category would turn to red. Users could select all the categories by using `CTRL-A`, then the selected categories should be added.
 
