@@ -50,7 +50,7 @@ After the calculation is completed, a JSON file would be created in the **Databa
 
 ![img5](https://user-images.githubusercontent.com/29302909/96915097-8600da80-14ae-11eb-9888-520e66c8d08e.png)
 
-**5.** If users want to add records manually to the displayed records, they should type the name of the record in the combobox. For example suppose a user wants to add **Albert Einstein** to the displayed records, the user could write **einstein** or a keyword that the program could find to the **Search A Record By Name** section, then if users press **Enter** key, a list of records that contains **einstein** characters would be inserted to the combobox and a drop-down menu would be popped. Users can select the found records from this drop-down menu via clicking to the arrow of the combobox. After selecting the record, a new button called **Add** is created as below.
+**5.** If users want to add records manually to the displayed records, they should type the name of the record in the combobox. For example suppose a user wants to add **Albert Einstein** to the displayed records, the user could write **einstein** or a keyword that the program could find to the **Search A Record By Name** section, then if the user press the **Enter** key, a list of records that contains the **einstein** characters would be inserted to the combobox and a drop-down menu would be popped. Users can select the found records from this drop-down menu via clicking to the arrow of the combobox. After selecting the record, a new button called **Add** is created as below.
 
 ![img6](https://user-images.githubusercontent.com/29302909/96916028-a8dfbe80-14af-11eb-80f5-3f2a1da8052e.png)
 
