@@ -7,10 +7,10 @@ class About(tk.Toplevel):
     def __init__(self):
         super().__init__()
         self.resizable(width=False, height=False)
-        self.version = "1.2.3"
+        self.version = "1.2.4"
         self.name = "TkEnneagram"
         self.date_built = "10.09.2020"
-        self.date_updated = "20.10.2020"
+        self.date_updated = "22.10.2020"
         self.thanks = "Sjoerd Visser"
         self.developed_by = "Tanberk Celalettin Kutlu"
         self.contact = "tckutlu@gmail.com"

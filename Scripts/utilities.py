@@ -327,6 +327,24 @@ def key_value(key, value):
 
 def check_update(icons):
     try:
+        new = urlopen(
+            "https://raw.githubusercontent.com/dildeolupbiten"
+            "/TkEnneagram/master/README.md"
+        ).read().decode()
+    except URLError:
+        MsgBox(
+            title="Warning",
+            message="Couldn't connect.",
+            level="warning",
+            icons=icons
+        )
+        return
+    with open("README.md", "r", encoding="utf-8") as f:
+        old = f.read()[:-1]
+    if new != old:
+        with open("README.md", "w", encoding="utf-8") as f:
+            f.write(new)
+    try:
         scripts = json.load(
             urlopen(
                 url=f"https://api.github.com/repos/dildeolupbiten/"

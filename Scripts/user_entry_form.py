@@ -273,6 +273,7 @@ class UserEntryForm(tk.Toplevel):
                 values=scores,
                 info=info,
                 hsys=hsys,
+                wide=True,
                 icons=self.icons,
                 patterns=user.patterns,
                 algorithm=algorithm
