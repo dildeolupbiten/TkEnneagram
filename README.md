@@ -1,6 +1,6 @@
 # TkEnneagram
 
-**TkEnneagram** is a Python program that calculates the Enneagram scores of the astrological results that are calculated from the values that are entered by users. The program uses a json file that includes the enneagram scores that is prepared by [Sjoerd Visser](https://vissesh.home.xs4all.nl/).
+**TkEnneagram** is a Python program that calculates the Enneagram scores of the astrological results that are calculated from the values that are both entered by users and stored in [Astro-Databank](https://www.astro.com/astro-databank/Main_Page). Because of the license conditions, [Astro-Databank](https://www.astro.com/astro-databank/Main_Page) can not be shared with third party users. Therefore those who are interested in using this program with [Astro-Databank](https://www.astro.com/astro-databank/Main_Page), should contact with the webmaster of [Astrodienst](http://www.astro.com) to get a license. The program uses a json file that includes the enneagram scores that is prepared by [Sjoerd Visser](https://vissesh.home.xs4all.nl/). 
 
 After downloading the program, users should see the below files and folders in the main directory of the program.
 
