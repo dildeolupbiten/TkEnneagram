@@ -20,6 +20,7 @@ class Zodiac:
             lat=.0,
             lon=.0,
             hsys="",
+            utc=False
     ):
         self.local_year = year
         self.local_month = month
@@ -31,12 +32,20 @@ class Zodiac:
         self.lon = lon
         self.hsys = hsys
         if not jd:
-            self.utc_year = self.local_to_utc()["year"]
-            self.utc_month = self.local_to_utc()["month"]
-            self.utc_day = self.local_to_utc()["day"]
-            self.utc_hour = self.local_to_utc()["hour"]
-            self.utc_minute = self.local_to_utc()["minute"]
-            self.utc_second = self.local_to_utc()["second"]
+            if not utc:
+                self.utc_year = self.local_to_utc()["year"]
+                self.utc_month = self.local_to_utc()["month"]
+                self.utc_day = self.local_to_utc()["day"]
+                self.utc_hour = self.local_to_utc()["hour"]
+                self.utc_minute = self.local_to_utc()["minute"]
+                self.utc_second = self.local_to_utc()["second"]
+            else:
+                self.utc_year = self.local_year
+                self.utc_month = self.local_month
+                self.utc_day = self.local_day
+                self.utc_hour = self.local_hour
+                self.utc_minute = self.local_minute
+                self.utc_second = self.local_second
             self.jd = self.julday()
         else:
             self.jd = jd
@@ -118,7 +127,6 @@ class Zodiac:
         house_positions = []
         config = ConfigParser()
         config.read("defaults.ini")
-        selected_planets = config["PLANETS"]["selected"].split(", ")
         for i in range(12):
             house = [
                 int(self.house_pos()[0][i][0]),
@@ -130,7 +138,7 @@ class Zodiac:
         for key, value in PLANETS.items():
             if value["number"] is None:
                 continue
-            if key not in selected_planets:
+            if config["PLANETS"][key.lower()] == "false":
                 continue
             planet = self.planet_pos(planet=value["number"])
             house = 0

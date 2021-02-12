@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from .entry import EntryFrame
 from .search import SearchFrame
 from .enneagram import Enneagram
 from .constants import HOUSE_SYSTEMS
@@ -8,21 +9,19 @@ from .messagebox import MsgBox, ChoiceBox
 from .treeview import Treeview, TreeviewToplevel
 from .utilities import (
     convert_coordinates, tbutton_command,
-    check_all_command, progressbar, load_database
+    check_all_command, progressbar, load_database,
+    from_xml
 )
 from .modules import (
-    os, dt, tk, np, ET, swe, ttk, json,
+    os, dt, tk, np, swe, ttk, json,
     time, open_new, logging, Thread, ConfigParser
 )
 
 
 class Database:
     def __init__(self, root, icons):
-        self.mode = None
         self.icons = icons
         self.database = None
-        self.category_dict = {}
-        self.all_categories = {}
         self.category_names = []
         self.choose_operation(root=root)
 
@@ -39,10 +38,8 @@ class Database:
             DatabaseFrame(
                 master=root,
                 database=self.database,
-                all_categories=self.all_categories,
                 category_names=self.category_names,
                 icons=self.icons,
-                mode=self.mode
             )
 
     def choose_operation(self, root):
@@ -51,154 +48,65 @@ class Database:
         if not os.listdir("Database"):
             return
         else:
-            SingleSelection(
+            selection = SingleSelection(
                 title="Database",
                 catalogue=[i for i in os.listdir("Database")]
             )
-            config = ConfigParser()
-            config.read("defaults.ini")
-            filename = config["DATABASE"]["selected"]
-            Thread(target=lambda: self.load_database(root, filename)).start()
+            if selection.done:
+                config = ConfigParser()
+                config.read("defaults.ini")
+                filename = config["DATABASE"]["selected"]
+                Thread(
+                    target=lambda: self.load_database(root, filename),
+                    daemon=True
+                ).start()
+            else:
+                return
+
+    def add_enneagram_scores(self, filename, ext):
+        result = self.calculate()
+        if not result:
+            return
+        config = ConfigParser()
+        config.read("defaults.ini")
+        filename = os.path.split(filename)[-1].replace(f".{ext}", "") + "_" + \
+            config["ALGORITHM"]["selected"].replace(".json", "") + ".json"
+        self.extract_database(filename=filename)
+        return True
 
     def load_adb(self, filename):
-        self.mode = "adb"
-        self.database = []
-        self.category_dict = {}
-        logging.info(f"Parsing {filename} file...")
-        tree = ET.parse(filename)
-        root = tree.getroot()
-        for i in range(1000000):
-            try:
-                user_data = []
-                for gender, roddenrating, bdata, adb_link, categories in \
-                        zip(
-                            root[i + 2][1].findall("gender"),
-                            root[i + 2][1].findall("roddenrating"),
-                            root[i + 2][1].findall("bdata"),
-                            root[i + 2][2].findall("adb_link"),
-                            root[i + 2][3].findall("categories")
-                        ):
-                    name = root[i + 2][1][0].text
-                    sbdate_dmy = bdata[1].text
-                    sbtime = bdata[2].text
-                    jd_ut = bdata[2].get("jd_ut")
-                    lat = bdata[3].get("slati")
-                    lon = bdata[3].get("slong")
-                    place = bdata[3].text
-                    country = bdata[4].text
-                    category = [
-                        (
-                            categories[j].get("cat_id"),
-                            categories[j].text
-                        )
-                        for j in range(len(categories))
-                    ]
-                    for cate in category:
-                        if cate[0] not in self.category_dict.keys():
-                            self.category_dict[cate[0]] = cate[1]
-                    user_data.append(int(root[i + 2].get("adb_id")))
-                    user_data.append(name)
-                    user_data.append(gender.text)
-                    user_data.append(roddenrating.text)
-                    user_data.append(sbdate_dmy)
-                    user_data.append(sbtime)
-                    user_data.append(jd_ut)
-                    user_data.append(lat)
-                    user_data.append(lon)
-                    user_data.append(place)
-                    user_data.append(country)
-                    user_data.append(adb_link.text)
-                    user_data.append(category)
-                    if len(user_data) != 0:
-                        self.database.append(user_data)
-            except IndexError:
-                break
+        self.database, self.category_names = from_xml(filename)
         try:
             logging.info("Completed parsing.")
             logging.info(f"{len(self.database)} records are available.")
         except tk.TclError:
             return
-        result = self.calculate()
-        if not result:
-            return
-        self.group_categories()
-        config = ConfigParser()
-        config.read("defaults.ini")
-        filename = os.path.split(filename)[-1].replace(".xml", "") + "_" + \
-            config["ALGORITHM"]["selected"].replace(".json", "") + ".json"
-        self.extract_database(filename=filename)
-        return True
-
-    def group_categories(self):
-        logging.info(f"Started grouping categories.")
-        self.all_categories = {}
-        for record in self.database:
-            for category in record[-3]:
-                if (category[0], category[1]) not in self.all_categories:
-                    if category[1] is None:
-                        pass
-                    self.all_categories[(category[0], category[1])] = []
-                self.all_categories[
-                    (category[0], category[1])
-                ].append(record)
-        self.category_names = sorted(
-            [i for i in self.category_dict.values() if i is not None]
+        return self.add_enneagram_scores(
+            filename=filename,
+            ext="xml"
         )
-        logging.info(f"Completed grouping categories.")
 
     def load_json(self, filename):
         if filename == "./Database/None":
             return
         logging.info(f"Parsing {filename} file...")
         self.database = load_database(filename=filename)
-        self.category_dict = {}
-        if not isinstance(self.database, dict):
-            self.mode = "adb"
-            for record in self.database:
-                for cate in record[-3]:
-                    if cate[0] not in self.category_dict:
-                        self.category_dict[cate[0]] = cate[1]
-        else:
-            self.database = {
-                key: {k: v for k, v in value.items() if k != "Notes"}
-                for index, (key, value) in enumerate(self.database.items())
-                if index > 1
-            }
-            self.mode = "normal"
-            count = 1
-            for key, value in self.database.items():
-                if not value["Categories"]:
-                    cat = "None"
-                    if cat not in self.category_dict.values():
-                        self.category_dict[count] = cat
-                        count += 1
-                else:
-                    for cat in value["Categories"]:
-                        if cat not in self.category_dict.values():
-                            self.category_dict[count] = cat
-                            count += 1
-            r = {v: k for k, v in self.category_dict.items()}
-            db = []
-            for key, value in self.database.items():
-                if value["Categories"]:
-                    cate = [[r[cat], cat] for cat in value["Categories"]]
-                else:
-                    cate = [[r["None"], "None"]]
-                info = [
-                    v for k, v in value.items()
-                    if k not in [
-                        "Access Time", "Update Time", "Categories"
-                    ]
-                ]
-                record = [key] + \
-                    info + \
-                    [cate] + \
-                    [value["Access Time"], value["Update Time"]]
-                db.append(record)
-            self.database = db
-        logging.info("Completed parsing.")
-        logging.info(f"{len(self.database)} records are available.")
-        self.group_categories()
+        if len(self.database[0]) != 15:
+            self.add_enneagram_scores(
+                filename=filename,
+                ext="json"
+            )
+        self.category_names = []
+        for record in self.database:
+            for cate in record[-3]:
+                if cate[1] and cate[1] not in self.category_names:
+                    self.category_names.append(cate[1])
+        self.category_names = sorted(self.category_names)
+        try:
+            logging.info("Completed parsing.")
+            logging.info(f"{len(self.database)} records are available.")
+        except tk.TclError:
+            return
         return True
 
     def extract_database(self, filename):
@@ -325,10 +233,8 @@ class DatabaseFrame(tk.Frame):
     def __init__(
             self,
             database,
-            all_categories,
             category_names,
             icons,
-            mode,
             *args,
             **kwargs
     ):
@@ -337,10 +243,8 @@ class DatabaseFrame(tk.Frame):
             i.destroy()
         self.pack()
         self.database = database
-        self.all_categories = all_categories
         self.category_names = category_names
         self.icons = icons
-        self.mode = mode
         self.displayed_results = []
         self.selected_ratings = []
         self.included = []
@@ -350,6 +254,8 @@ class DatabaseFrame(tk.Frame):
         self.category_menu = None
         self.treeview_menu = None
         self.entry_menu = None
+        self.start = ""
+        self.end = ""
         self.pressed_return = 0
         self.info_var = tk.StringVar()
         self.info_var.set("0")
@@ -359,18 +265,11 @@ class DatabaseFrame(tk.Frame):
         self.midframe.pack()
         self.bottomframe = tk.Frame(master=self)
         self.bottomframe.pack()
-        if self.mode == "adb":
-            self.columns = [
-                "Adb ID", "Name", "Gender", "Rodden Rating", "Date",
-                "Hour", "Julian Date", "Latitude", "Longitude", "Place",
-                "Country", "Adb Link", "Category", "Type", "Wing"
-            ]
-        else:
-            self.columns = [
-                "No", "Name", "Gender", "Rodden Rating", "Date",
-                "Hour", "Julian Date", "Latitude", "Longitude", "Type",
-                "Wing", "URL", "Category", "Access Time", "Update Time"
-            ]
+        self.columns = [
+            "Adb ID", "Name", "Gender", "Rodden Rating", "Date",
+            "Hour", "Julian Date", "Latitude", "Longitude", "Place",
+            "Country", "Adb Link", "Category", "Type", "Wing"
+        ]
         self.treeview = Treeview(
             master=self.midframe,
             columns=self.columns,
@@ -423,13 +322,29 @@ class DatabaseFrame(tk.Frame):
             command=self.select_ratings
         )
         self.rating_button.grid(row=2, column=1, padx=5, pady=5)
-        self.create_checkbutton()
-        self.display_button = tk.Button(
+        self.entry_frame = EntryFrame(
             master=self.topframe,
-            text="Display Records",
-            command=self.display_results
+            texts=["From", "To"],
+            title="Select Year Range"
         )
-        self.display_button.grid(row=10, column=0, columnspan=4, pady=10)
+        self.entry_frame.grid(row=10, column=0, columnspan=4, pady=10)
+        self.button_frame = tk.Frame(master=self.topframe)
+        self.button_frame.grid(row=11, column=0, columnspan=4, pady=10)
+        self.create_checkbutton()
+        self.get_button = tk.Button(
+            master=self.button_frame,
+            text="Get Records",
+            command=self.get_records,
+            width=12
+        )
+        self.get_button.pack(side="left")
+        self.display_button = tk.Button(
+            master=self.button_frame,
+            text="Display Records",
+            command=self.display_results,
+            width=12
+        )
+        self.display_button.pack(side="left")
         self.total_msgbox_info = tk.Label(
             master=self.bottomframe,
             text="Total = "
@@ -445,22 +360,14 @@ class DatabaseFrame(tk.Frame):
     def create_checkbutton(self):
         check_frame = tk.Frame(master=self.entry_button_frame)
         check_frame.grid(row=1, column=2, pady=10, rowspan=2)
-        if self.mode == "adb":
-            names = (
-                "event",
-                "human",
-                "male",
-                "female",
-                "North Hemisphere",
-                "South Hemisphere"
-            )
-        else:
-            names = (
-                "male",
-                "female",
-                "North Hemisphere",
-                "South Hemisphere"
-            )
+        names = (
+            "event",
+            "human",
+            "male",
+            "female",
+            "North Hemisphere",
+            "South Hemisphere"
+        )
         for i, j in enumerate(names):
             var = tk.StringVar()
             var.set(value="0")
@@ -471,63 +378,107 @@ class DatabaseFrame(tk.Frame):
             checkbutton.grid(row=i, column=2, columnspan=2, sticky="w")
             self.checkbuttons[j] = [var, checkbutton]
 
-    def south_north_check(self, item):
-        north = self.checkbuttons["North Hemisphere"][0]
-        south = self.checkbuttons["South Hemisphere"][0]
-        if north.get() == "1" and south.get() == "0":
-            if isinstance(item[7], str):
-                if "n" in item[7]:
-                    pass
-                else:
-                    self.insert_to_treeview(item)
-            else:
-                if item[7] > 0:
-                    pass
-                else:
-                    self.insert_to_treeview(item)
-        elif north.get() == "0" and south.get() == "1":
-            if isinstance(item[7], str):
-                if "s" in item[7]:
-                    pass
-                else:
-                    self.insert_to_treeview(item)
-            else:
-                if item[7] < 0:
-                    pass
-                else:
-                    self.insert_to_treeview(item)
-        elif north.get() == "0" and south.get() == "0":
-            self.insert_to_treeview(item)
-        elif north.get() == "1" and south.get() == "1":
-            pass
+    def inform_user(self, message="inserted"):
+        self.update()
+        if len(self.displayed_results) == 0:
+            MsgBox(
+                title="Info",
+                message=f"No record is {message}.",
+                icons=self.icons,
+                level="info"
+            )
+        elif len(self.displayed_results) == 1:
+            MsgBox(
+                title="Info",
+                message=f"1 record is {message}.",
+                icons=self.icons,
+                level="info"
+            )
+        else:
+            MsgBox(
+                title="Display Records",
+                message=f"{len(self.displayed_results)} "
+                        f"records are {message}.",
+                icons=self.icons,
+                level="info"
+            )
 
-    def male_female_check(self, item):
+    def get_records(self, display=False):
+        self.displayed_results = []
+        event = self.checkbuttons["event"][0]
+        human = self.checkbuttons["human"][0]
         male = self.checkbuttons["male"][0]
         female = self.checkbuttons["female"][0]
-        if male.get() == "1" and female.get() == "0":
-            if item[2] == "M":
-                pass
-            else:
-                self.south_north_check(item)
-        elif male.get() == "0" and female.get() == "1":
-            if item[2] == "F":
-                pass
-            else:
-                self.south_north_check(item)
-        elif male.get() == "0" and female.get() == "0":
-            self.south_north_check(item)
-        elif male.get() == "1" and female.get() == "1":
-            if item[2] == "F" or item[2] == "M":
-                pass
-            else:
-                self.south_north_check(item)
-
-    def insert_to_treeview(self, item):
-        num = len(self.treeview.get_children()) + 1
-        self.treeview.insert("", num, values=[col for col in item])
-        self.info_var.set(len(self.displayed_results))
-        self.displayed_results.append(item)
-        self.update()
+        north = self.checkbuttons["North Hemisphere"][0]
+        south = self.checkbuttons["South Hemisphere"][0]
+        self.start = self.entry_frame.widgets["From"].get()
+        self.end = self.entry_frame.widgets["To"].get()
+        for record in self.database:
+            if record[3] not in self.selected_ratings:
+                continue
+            if event.get() == "1" and record[2] == "N/A":
+                continue
+            if human.get() == "1" and record[2] in ["F", "M"]:
+                continue
+            if male.get() == "1" and record[2] == "M":
+                continue
+            if female.get() == "1" and record[2] == "F":
+                continue
+            if (
+                isinstance(record[7], str)
+                and
+                north.get() == "1"
+                and
+                "n" in record[7]
+            ):
+                continue
+            if (
+                isinstance(record[7], float)
+                and
+                north.get() == "1"
+                and
+                record[7] > 0
+            ):
+                continue
+            if (
+                isinstance(record[7], str)
+                and
+                south.get() == "1"
+                and
+                "s" in record[7]
+            ):
+                continue
+            if (
+                isinstance(record[7], float)
+                and
+                south.get() == "1"
+                and
+                record[7] < 0
+            ):
+                continue
+            if record[0] in [3546, 68092]:
+                continue
+            if not any(
+                category[1] in self.included
+                for category in record[-3]
+            ):
+                continue
+            if any(
+                category[1] in self.ignored
+                for category in record[-3]
+            ):
+                continue
+            year = int(record[4].split()[2])
+            if (
+                self.start
+                and
+                self.end
+                and not int(self.start) <= year <= int(self.end)
+            ):
+                continue
+            self.displayed_results += [record]
+        if not display:
+            self.inform_user(message="gotten")
 
     def display_results(self):
         if self.treeview.get_children():
@@ -547,90 +498,20 @@ class DatabaseFrame(tk.Frame):
                 pass
             else:
                 return
+        self.get_records(display=True)
         self.treeview.delete(*self.treeview.get_children())
-        self.displayed_results = []
-        if self.mode == "adb":
-            event = self.checkbuttons["event"][0]
-            human = self.checkbuttons["human"][0]
-        else:
-            event = tk.StringVar()
-            event.set("0")
-            human = tk.StringVar()
-            human.set("0")
-        for key, value in self.all_categories.items():
-            if key[1] in self.included:
-                for item in value:
-                    ignore = False
-                    for j in item[-3]:
-                        if j[1] in self.ignored:
-                            ignore = True
-                            break
-                    if ignore:
-                        continue
-                    if item[3] in self.selected_ratings:
-                        if item in self.displayed_results:
-                            pass
-                        else:
-                            if (
-                                    event.get() == "0"
-                                    and
-                                    human.get() == "0"
-                            ):
-                                if item[0] == 3546 or item[0] == 68092:
-                                    pass
-                                else:
-                                    self.male_female_check(item)
-                            elif (
-                                    event.get() == "1"
-                                    and
-                                    human.get() == "0"
-                            ):
-                                if item[2] == "N/A":
-                                    pass
-                                elif item[0] == 3546:
-                                    pass
-                                else:
-                                    self.male_female_check(item)
-                            elif (
-                                    event.get() == "0"
-                                    and
-                                    human.get() == "1"
-                            ):
-                                if item[2] != "N/A" or item[0] == 68092:
-                                    pass
-                                else:
-                                    self.south_north_check(item)
-                            elif (
-                                    event.get() == "1"
-                                    and
-                                    human.get() == "1"
-                            ):
-                                pass
-        self.info_var.set(len(self.displayed_results))
-        self.update()
-        if len(self.displayed_results) == 0:
-            MsgBox(
-                title="Info",
-                message="No record is inserted.",
-                icons=self.icons,
-                level="info"
-            )
-        elif len(self.displayed_results) == 1:
-            MsgBox(
-                title="Info",
-                message="1 record is inserted.",
-                icons=self.icons,
-                level="info"
-            )
-        else:
-            MsgBox(
-                title="Display Records",
-                message=f"{len(self.displayed_results)} "
-                        f"records are inserted.",
-                icons=self.icons,
-                level="info"
-            )
-        self.update()
+        for index, i in enumerate(self.displayed_results):
+            try:
+                self.treeview.insert(
+                    parent="",
+                    index=index,
+                    values=i
+                )
+                self.info_var.set(index + 1)
+                self.update()
+            except tk.TclError:
+                return
+        self.inform_user()
 
     def select_ratings(self):
         self.selected_ratings = []
@@ -905,21 +786,21 @@ class DatabaseFrame(tk.Frame):
                 values = self.treeview.item(selected)["values"]
             except tk.TclError:
                 return
-            if self.mode == "adb":
-                latitude = str(round(convert_coordinates(values[7]), 2))
-                longitude = str(round(convert_coordinates(values[8]), 2))
-            else:
-                latitude = values[7]
-                longitude = values[8]
+            latitude = str(round(convert_coordinates(values[7]), 2))
+            longitude = str(round(convert_coordinates(values[8]), 2))
             config = ConfigParser()
             config.read("defaults.ini")
             algorithm = config["ALGORITHM"]["selected"]
             hsys = HOUSE_SYSTEMS[config["HOUSE SYSTEM"]["selected"]]
+            if "Jul" in values[4]:
+                date = values[4].split("(")[-1].replace(" greg.)", "")
+            else:
+                date = values[4]
             info = {
                 "Name": values[1],
                 "Gender": values[2],
                 "Date": dt.strptime(
-                    values[4],
+                    date,
                     "%d %B %Y"
                 ).strftime("%d.%m.%Y"),
                 "Time": values[5],
@@ -928,8 +809,8 @@ class DatabaseFrame(tk.Frame):
             }
             user = Enneagram(
                 jd=float(values[6]),
-                lat=float(info["Latitude"]),
-                lon=float(info["Longitude"]),
+                lat=float(latitude),
+                lon=float(longitude),
                 hsys=hsys,
                 icons=self.icons
             )
@@ -937,6 +818,7 @@ class DatabaseFrame(tk.Frame):
             TreeviewToplevel(
                 values=scores,
                 info=info,
+                jd=float(values[6]),
                 hsys=hsys,
                 icons=self.icons,
                 patterns=user.patterns,
@@ -971,12 +853,8 @@ class DatabaseFrame(tk.Frame):
     def button_3_on_treeview(self, event):
         self.destroy_menu(self.treeview_menu)
         self.treeview_menu = tk.Menu(master=None, tearoff=False)
-        if self.mode == "adb":
-            label = "Open ADB Page"
-        else:
-            label = "Open Wikipedia Page"
         self.treeview_menu.add_command(
-            label=label,
+            label="Open ADB Page",
             command=self.button_3_open_url
         )
         self.treeview_menu.add_command(

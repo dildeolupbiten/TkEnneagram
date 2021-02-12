@@ -272,6 +272,7 @@ class UserEntryForm(tk.Toplevel):
             TreeviewToplevel(
                 values=scores,
                 info=info,
+                jd=user.chart.jd,
                 hsys=hsys,
                 wide=True,
                 icons=self.icons,

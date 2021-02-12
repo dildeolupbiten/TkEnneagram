@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from .plot import Plot
 from .messagebox import MsgBox
 from .modules import np, tk, ttk
 from .spreadsheet import Spreadsheet
@@ -156,6 +157,7 @@ class TreeviewToplevel(tk.Toplevel):
             self,
             values,
             info,
+            jd,
             hsys,
             icons,
             patterns,
@@ -166,6 +168,7 @@ class TreeviewToplevel(tk.Toplevel):
     ):
         super().__init__(*args, **kwargs)
         self.title("Enneagram Scores")
+        self.jd = jd
         self.hsys = {v: k for k, v in HOUSE_SYSTEMS.items()}[hsys]
         self.resizable(width=False, height=False)
         self.top_frame = tk.Frame(master=self)
@@ -185,12 +188,22 @@ class TreeviewToplevel(tk.Toplevel):
             wide=wide,
             columns=self.columns,
         )
-        self.button = tk.Button(
-            master=self,
+        self.button_frame = tk.Frame(master=self)
+        self.button_frame.pack()
+        self.export_button = tk.Button(
+            master=self.button_frame,
             text="Export",
+            width=10,
             command=lambda: self.export(info, icons, algorithm)
         )
-        self.button.pack()
+        self.export_button.pack(side="left")
+        self.plot_button = tk.Button(
+            master=self.button_frame,
+            text="Plot",
+            width=10,
+            command=lambda: Plot(info=info, jd=self.jd, hsys=self.hsys)
+        )
+        self.plot_button.pack(side="left")
         self.create_info_widgets(info, patterns, algorithm)
 
     def create_info_widgets(self, info, patterns, algorithm):

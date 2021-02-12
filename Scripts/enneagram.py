@@ -18,7 +18,8 @@ class Enneagram:
             lat=.0,
             lon=.0,
             hsys="",
-            icons=None
+            icons=None,
+            utc=False,
     ):
         self.chart = Zodiac(
             year=year,
@@ -30,7 +31,8 @@ class Enneagram:
             jd=jd,
             lat=lat,
             lon=lon,
-            hsys=hsys
+            hsys=hsys,
+            utc=utc
         )
         self.patterns = self.chart.patterns()
         self.scores = None

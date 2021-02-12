@@ -3,7 +3,7 @@
 from .messagebox import MsgBox
 from .constants import SIGNS, PLANETS, CATEGORIES, HOUSE_SYSTEMS
 from .modules import (
-    dt, tk, os, ttk, json, time, Popen, urlopen,
+    dt, tk, os, ET, ttk, json, time, Popen, urlopen,
     URLError, PhotoImage, pickle, ConfigParser, askopenfilename
 )
 
@@ -138,12 +138,8 @@ def load_defaults():
     with open("defaults.ini", "w") as f:
         config["HOUSE SYSTEM"] = {"selected": "Placidus"}
         config["PLANETS"] = {
-            "selected":
-                ", ".join(
-                    planet
-                    for planet in PLANETS
-                    if planet not in ["Ascendant", "Midheaven"]
-                )
+            planet: "true"
+            for planet in PLANETS
         }
         config["ALGORITHM"] = {"selected": "2010_Algorithm_Placidus.json"}
         config["AUTH"] = {"selected": "None"}
@@ -392,6 +388,8 @@ def check_update(icons):
             level="info",
             icons=icons
         )
+        if os.path.exists("defaults.ini"):
+            os.remove("defaults.ini")
         if os.name == "posix":
             Popen(["python3", "run.py"])
             os.kill(os.getpid(), __import__("signal").SIGKILL)
@@ -405,3 +403,57 @@ def check_update(icons):
             level="info",
             icons=icons
         )
+
+
+def from_xml(filename):
+    database = []
+    category_names = []
+    tree = ET.parse(filename)
+    root = tree.getroot()
+    for i in range(1000000):
+        try:
+            user_data = []
+            for gender, roddenrating, bdata, adb_link, categories in \
+                    zip(
+                        root[i + 2][1].findall("gender"),
+                        root[i + 2][1].findall("roddenrating"),
+                        root[i + 2][1].findall("bdata"),
+                        root[i + 2][2].findall("adb_link"),
+                        root[i + 2][3].findall("categories")
+                    ):
+                name = root[i + 2][1][0].text
+                sbdate_dmy = bdata[1].text
+                sbtime = bdata[2].text
+                jd_ut = bdata[2].get("jd_ut")
+                lat = bdata[3].get("slati")
+                lon = bdata[3].get("slong")
+                place = bdata[3].text
+                country = bdata[4].text
+                categories = [
+                    (
+                        categories[j].get("cat_id"),
+                        categories[j].text
+                    )
+                    for j in range(len(categories))
+                ]
+                for category in categories:
+                    if category[1] and category[1] not in category_names:
+                        category_names.append(category[1])
+                user_data.append(int(root[i + 2].get("adb_id")))
+                user_data.append(name)
+                user_data.append(gender.text)
+                user_data.append(roddenrating.text)
+                user_data.append(sbdate_dmy)
+                user_data.append(sbtime)
+                user_data.append(jd_ut)
+                user_data.append(lat)
+                user_data.append(lon)
+                user_data.append(place)
+                user_data.append(country)
+                user_data.append(adb_link.text)
+                user_data.append(categories)
+                if len(user_data) != 0:
+                    database.append(user_data)
+        except IndexError:
+            break
+    return database, sorted(category_names)

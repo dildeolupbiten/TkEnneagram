@@ -9,7 +9,6 @@ class Selection(tk.Toplevel):
         self.title(title)
         self.config = ConfigParser()
         self.config.read("defaults.ini")
-        self.selected = self.config[title.upper()]["selected"]
         self.catalogue = catalogue
         self.resizable(width=False, height=False)
         self.topframe = tk.Frame(master=self)
@@ -23,7 +22,6 @@ class Selection(tk.Toplevel):
             command=lambda: self.apply(title=title.upper())
         )
         self.button.pack()
-        self.wm_protocol("WM_DELETE_WINDOW", lambda: None)
 
     def apply(self, title):
         pass
@@ -31,6 +29,7 @@ class Selection(tk.Toplevel):
 
 class SingleSelection(Selection):
     def __init__(self, title, catalogue, *args, **kwargs):
+        self.done = False
         super().__init__(
             title=title,
             catalogue=catalogue,
@@ -38,11 +37,9 @@ class SingleSelection(Selection):
             **kwargs
         )
         for i, j in enumerate(self.catalogue):
-            var = tk.StringVar()
-            if j == self.selected:
-                var.set(value="1")
-            else:
-                var.set(value="0")
+            var = tk.BooleanVar()
+            if self.config[title.upper()]["selected"] == j:
+                var.set(True)
             checkbutton = tk.Checkbutton(
                 master=self.topframe,
                 text=j,
@@ -54,11 +51,14 @@ class SingleSelection(Selection):
         self.wait_window()
 
     def apply(self, title):
+        config = ConfigParser()
+        config.read("defaults.ini")
         for i in self.catalogue:
-            if self.checkbuttons[i][1].get() == "1":
-                self.config[title] = {"selected": i}
+            if self.checkbuttons[i][1].get():
+                config[title] = {"selected": i}
                 with open("defaults.ini", "w") as f:
-                    self.config.write(f)
+                    config.write(f)
+        self.done = True
         self.destroy()
 
     def configure_checkbuttons(self, option):
@@ -84,8 +84,8 @@ class MultipleSelection(Selection):
             **kwargs
         )
         self.geometry("200x400")
-        self.check_all = tk.StringVar()
-        self.check_all.set("0")
+        self.check_all = tk.BooleanVar()
+        self.check_all.set(False)
         self.select_all = tk.Checkbutton(
             master=self.topframe,
             text="Check/Uncheck All",
@@ -96,11 +96,11 @@ class MultipleSelection(Selection):
             self.select_all, self.check_all
         ]
         for i, j in enumerate(catalogue):
-            var = tk.StringVar()
-            if j in self.selected:
-                var.set("1")
+            var = tk.BooleanVar()
+            if self.config[title.upper()][j] == "true":
+                var.set(True)
             else:
-                var.set("0")
+                var.set(False)
             checkbutton = tk.Checkbutton(
                 master=self.topframe,
                 text=j,
@@ -108,25 +108,29 @@ class MultipleSelection(Selection):
             )
             checkbutton.grid(row=i + 1, column=0, sticky="w")
             self.checkbuttons[j] = [checkbutton, var]
-        self.check_all.set("0")
+        self.check_all.set(False)
         self.select_all["command"] = self.check_all_command
 
     def check_all_command(self):
-        if self.check_all.get() == "1":
+        if self.check_all.get():
             for values in self.checkbuttons.values():
-                values[-1].set("1")
-                values[0].configure(variable=values[-1])
+                values[-1].set(True)
         else:
             for values in self.checkbuttons.values():
-                values[-1].set(",")
-                values[0].configure(variable=values[-1])
+                values[-1].set(False)
 
     def apply(self, title):
-        selected = []
+        selected = {}
         for k, v in self.checkbuttons.items():
-            if v[1].get() == "1" and k != "Check/Uncheck All":
-                selected.append(k)
-        self.config[title] = {"selected": ", ".join(selected)}
+            if k == "Check/Uncheck All":
+                continue
+            if v[1].get():
+                selected[k] = "true"
+            else:
+                selected[k] = "false"
+        selected["asc"] = "true"
+        selected["mc"] = "true"
+        self.config[title] = selected
         with open("defaults.ini", "w") as f:
             self.config.write(f)
         self.destroy()

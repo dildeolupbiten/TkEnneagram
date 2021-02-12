@@ -17,8 +17,10 @@ packages = [
     "numpy==1.19.2",
     "geopy==2.0.0",
     "python-dateutil",
+    "pandas"
     "pytz",
     "six",
+    "matplotlib",
     "timezonefinder",
     "XlsxWriter"
 ]
