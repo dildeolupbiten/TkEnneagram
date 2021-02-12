@@ -12,6 +12,7 @@ class Plot(tk.Toplevel):
     def __init__(self, info, jd, hsys, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.date = pd.to_datetime(jd, unit="D", origin="julian")
+        self.resizable(width=False, height=False)
         self.title(info["Name"])
         self.left_frame = tk.Frame(master=self)
         self.left_frame.pack(side="left", fill="both")
