@@ -4,13 +4,17 @@ from .entry import EntryFrame
 from .enneagram import Enneagram
 from .constants import HOUSE_SYSTEMS
 from .modules import (
-    np, pd, td, tk, plt, FigureCanvasTkAgg, NavigationToolbar2Tk
+    np, pd, td, tk, plt, num2date,
+    FigureCanvasTkAgg, NavigationToolbar2Tk
 )
 
 
 class Plot(tk.Toplevel):
     def __init__(self, info, jd, hsys, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.x = []
+        self.y = []
+        self.z = {}
         self.date = pd.to_datetime(jd, unit="D", origin="julian")
         self.resizable(width=False, height=False)
         self.title(info["Name"])
@@ -66,6 +70,38 @@ class Plot(tk.Toplevel):
             )
         )
         self.plot_button.pack()
+        self.frame, self.labels = self.create_info_frame()
+        self.canvas.mpl_connect(
+            "motion_notify_event",
+            lambda event: self.on_motion(event)
+        )
+
+    def create_info_frame(self):
+        frame = tk.Frame(master=self.right_frame, bg="white")
+        labels = {}
+        for i in range(1, 10):
+            title = tk.Label(
+                master=frame,
+                text=f"Type-{i}",
+                fg="red",
+                bg="white"
+            )
+            title.grid(row=i, column=0)
+            label = tk.Label(master=frame, text="", bg="white")
+            label.grid(row=i, column=1)
+            labels[f"Type-{i}"] = label
+        return frame, labels
+
+    def on_motion(self, event):
+        if event.xdata:
+            hour = num2date(event.xdata).strftime("%H:%M")
+            key = (hour, round(event.ydata))
+            if key in self.z:
+                for label, value in zip(self.labels, self.z[key]):
+                    self.labels[label]["text"] = value
+                self.frame.place_configure(x=event.guiEvent.x, y=event.guiEvent.y)
+            else:
+                self.frame.place_forget()
 
     def create_label(self, text, date, row):
         label = tk.Label(master=self.date_frame, text=text, fg="red")
@@ -73,26 +109,29 @@ class Plot(tk.Toplevel):
         value = tk.Label(master=self.date_frame, text=date)
         value.grid(row=row, column=1, sticky="w")
 
-    def binom_graph(self, x, y, title):
+    def plot(self, x, y, z, title):
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        ax.plot(x, y)
-        y = sorted(list(set(y)))
+        _y = sorted(list(set(y)))
+        ax.scatter(x, y)
+        self.x = [i.strftime("%H:%M") for i in x]
+        self.y = _y
+        self.z = z
         self.figure.legend(*ax.get_legend_handles_labels())
-        self.figure.gca().set_xlabel("Hour")
-        self.figure.gca().set_xticks(x)
-        self.figure.gca().set_xticklabels(
+        ax.set_xlabel("Hour")
+        ax.set_xticks(x)
+        ax.set_xticklabels(
             [i.strftime("%H:%M") for i in x]
         )
-        self.figure.gca().set_ylabel("Enneagram Type")
-        self.figure.gca().set_yticks(y)
-        self.figure.gca().set_yticklabels([f"Type-{i}" for i in y])
+        ax.set_ylabel("Enneagram Type")
+        ax.set_yticks(_y)
+        ax.set_yticklabels([f"Type-{i}" for i in _y])
         for label in ax.xaxis.get_ticklabels():
             label.set_rotation(45)
             label.set_fontsize(8)
             if label.get_text() == self.date.strftime("%H:%M"):
                 label.set_color("red")
-        self.figure.gca().set_title(title)
+        ax.set_title(title)
         self.figure.subplots_adjust(
             left=0.2,
             bottom=0.4,
@@ -107,8 +146,9 @@ class Plot(tk.Toplevel):
         dates = self.get_dates(widget=self.backward, multiply=-1)
         dates += [self.date]
         dates += self.get_dates(widget=self.forward, multiply=1)
-        y = []
         x = []
+        y = []
+        z = {}
         for date in dates:
             result = Enneagram(
                 year=date.year,
@@ -131,7 +171,8 @@ class Plot(tk.Toplevel):
             total = [round(float(i), 2) for i in total[0] * total[1]]
             x += [date]
             y += [total.index(max(total)) + 1]
-        self.binom_graph(x=sorted(x), y=y, title=title)
+            z[(date.strftime("%H:%M"), total.index(max(total)) + 1)] = total
+        self.plot(x=x, y=y, z=z, title=title)
 
     def get_dates(self, widget, multiply):
         time_interval = widget.widgets["Time Interval (min)"].get()
@@ -139,9 +180,12 @@ class Plot(tk.Toplevel):
         if all([time_interval, number_of_intervals]):
             time_interval = int(time_interval) * multiply
             number_of_intervals = int(number_of_intervals)
-            return [
+            result = [
                 self.date + td(minutes=time_interval * (i + 1))
                 for i in range(number_of_intervals)
             ]
+            if multiply == -1:
+                return sorted(result)
+            return result
         else:
             return []

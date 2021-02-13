@@ -21,6 +21,7 @@ from xlsxwriter import Workbook
 from urllib.error import URLError
 from urllib.request import urlopen
 from tkinter import ttk, PhotoImage
+from matplotlib.dates import num2date
 from geopy.geocoders import Nominatim
 from configparser import ConfigParser
 from timezonefinder import TimezoneFinder
