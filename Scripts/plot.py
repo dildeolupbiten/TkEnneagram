@@ -3,8 +3,9 @@
 from .entry import EntryFrame
 from .enneagram import Enneagram
 from .constants import HOUSE_SYSTEMS
+from .selection import MultipleSelection
 from .modules import (
-    np, pd, td, tk, plt,
+    np, pd, td, tk, plt, ConfigParser,
     FigureCanvasTkAgg, NavigationToolbar2Tk
 )
 
@@ -12,6 +13,20 @@ from .modules import (
 class Plot(tk.Toplevel):
     def __init__(self, info, jd, hsys, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.menu = tk.Menu(master=self)
+        self.configure(menu=self.menu)
+        self.select_menu = tk.Menu(master=self.menu, tearoff=False)
+        self.menu.add_cascade(
+            label="Select",
+            menu=self.select_menu
+        )
+        self.select_menu.add_command(
+            label="Enneagram Scores",
+            command=lambda: MultipleSelection(
+                title="Enneagram Scores",
+                catalogue=[f"Type-{i + 1}" for i in range(9)]
+            )
+        )
         self.color = [
             "red",
             "green",
@@ -89,8 +104,13 @@ class Plot(tk.Toplevel):
         self.figure.clear()
         ax = self.figure.add_subplot(111)
         start = 0
+        config = ConfigParser()
+        config.read("defaults.ini")
+        enneagram_scores = config["ENNEAGRAM SCORES"]
         for i, j in zip(x, y):
             for index, k in enumerate(j):
+                if enneagram_scores[f"type-{index + 1}"] == "false":
+                    continue
                 if start == 0:
                     ax.scatter(
                         i,
@@ -103,13 +123,29 @@ class Plot(tk.Toplevel):
             start += 1
         self.figure.legend(*ax.get_legend_handles_labels())
         ax.set_xlabel("Hour")
+        _x = []
+        step = len(x) // 10 if len(x) > 20 else 1
+        count = 0
+        for i in x:
+            if 0 < count < step:
+                _x += [""]
+                count += 1
+            else:
+                count = 0
+                _x += [i.strftime("%H:%M")]
+                count += 1
         ax.set_xticks(x)
-        ax.set_xticklabels([i.strftime("%H:%M") for i in x])
+        ax.set_xticklabels(_x)
         ax.set_ylabel("Enneagram Scores")
-        for label in ax.xaxis.get_ticklabels():
+        for label, date in zip(ax.xaxis.get_ticklabels(), x):
             label.set_rotation(45)
             label.set_fontsize(8)
-            if label.get_text() == self.date.strftime("%H:%M"):
+            if (
+                    label.get_text() == self.date.strftime("%H:%M")
+                    and
+                    date.strftime("%Y.%m.%d %H:%M") ==
+                    self.date.strftime("%Y.%m.%d %H:%M")
+            ):
                 label.set_color("red")
         ax.set_title(title)
         self.figure.subplots_adjust(

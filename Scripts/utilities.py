@@ -145,6 +145,10 @@ def load_defaults():
         config["AUTH"] = {"selected": "None"}
         config["DATABASE"] = {"selected": "None"}
         config["CATEGORY SELECTION"] = {"selected": "Basic"}
+        config["ENNEAGRAM SCORES"] = {
+            f"Type-{i + 1}": "true"
+            for i in range(9)
+        }
         config.write(f)
         
         
