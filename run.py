@@ -17,7 +17,7 @@ packages = [
     "numpy==1.19.2",
     "geopy==2.0.0",
     "python-dateutil",
-    "pandas"
+    "pandas==1.1.2"
     "pytz",
     "six",
     "matplotlib",
