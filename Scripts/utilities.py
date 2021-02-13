@@ -145,6 +145,7 @@ def load_defaults():
         config["AUTH"] = {"selected": "None"}
         config["DATABASE"] = {"selected": "None"}
         config["CATEGORY SELECTION"] = {"selected": "Basic"}
+        config["PLOT SCORE"] = {"selected": "As Event"}
         config.write(f)
         
         

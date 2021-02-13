@@ -4,7 +4,7 @@ from .entry import EntryFrame
 from .enneagram import Enneagram
 from .constants import HOUSE_SYSTEMS
 from .modules import (
-    np, pd, td, tk, plt, num2date,
+    np, pd, td, tk, plt, num2date, ConfigParser,
     FigureCanvasTkAgg, NavigationToolbar2Tk
 )
 
@@ -15,6 +15,8 @@ class Plot(tk.Toplevel):
         self.x = []
         self.y = []
         self.z = {}
+        self.frame = None
+        self.labels = None
         self.date = pd.to_datetime(jd, unit="D", origin="julian")
         self.resizable(width=False, height=False)
         self.title(info["Name"])
@@ -70,11 +72,6 @@ class Plot(tk.Toplevel):
             )
         )
         self.plot_button.pack()
-        self.frame, self.labels = self.create_info_frame()
-        self.canvas.mpl_connect(
-            "motion_notify_event",
-            lambda event: self.on_motion(event)
-        )
 
     def create_info_frame(self):
         frame = tk.Frame(master=self.right_frame, bg="white")
@@ -99,7 +96,10 @@ class Plot(tk.Toplevel):
             if key in self.z:
                 for label, value in zip(self.labels, self.z[key]):
                     self.labels[label]["text"] = value
-                self.frame.place_configure(x=event.guiEvent.x, y=event.guiEvent.y)
+                self.frame.place_configure(
+                    x=event.guiEvent.x,
+                    y=event.guiEvent.y
+                )
             else:
                 self.frame.place_forget()
 
@@ -109,22 +109,36 @@ class Plot(tk.Toplevel):
         value = tk.Label(master=self.date_frame, text=date)
         value.grid(row=row, column=1, sticky="w")
 
-    def plot(self, x, y, z, title):
+    def plot(self, x, y, z, title, selected):
         self.figure.clear()
         ax = self.figure.add_subplot(111)
         _y = sorted(list(set(y)))
-        ax.scatter(x, y)
-        self.x = [i.strftime("%H:%M") for i in x]
-        self.y = _y
-        self.z = z
+        if selected == "As Fixed":
+            ax.axis([0, len(x) + 1, 0, len(_y) + 1])
+            ax.set_xticks([i for i in range(1, len(x) + 1)])
+            ax.set_yticks([i for i in range(1, len(_y) + 1)])
+            for index, (t, d) in enumerate(zip(x, y), 1):
+                ax.scatter(index, _y.index(d) + 1)
+                value = ", ".join(map(str, z[(t.strftime("%H:%M"), d)]))
+                ax.text(
+                    index,
+                    _y.index(d) + 1 - 0.05,
+                    value,
+                    fontsize=7,
+                    ha="center",
+                    va="center"
+                )
+        else:
+            ax.set_xticks(x)
+            ax.set_yticks(_y)
+            ax.scatter(x, y)
+            self.x = [i.strftime("%H:%M") for i in x]
+            self.y = _y
+            self.z = z
         self.figure.legend(*ax.get_legend_handles_labels())
         ax.set_xlabel("Hour")
-        ax.set_xticks(x)
-        ax.set_xticklabels(
-            [i.strftime("%H:%M") for i in x]
-        )
+        ax.set_xticklabels([i.strftime("%H:%M") for i in x])
         ax.set_ylabel("Enneagram Type")
-        ax.set_yticks(_y)
         ax.set_yticklabels([f"Type-{i}" for i in _y])
         for label in ax.xaxis.get_ticklabels():
             label.set_rotation(45)
@@ -172,7 +186,16 @@ class Plot(tk.Toplevel):
             x += [date]
             y += [total.index(max(total)) + 1]
             z[(date.strftime("%H:%M"), total.index(max(total)) + 1)] = total
-        self.plot(x=x, y=y, z=z, title=title)
+        config = ConfigParser()
+        config.read("defaults.ini")
+        selected = config["PLOT SCORE"]["selected"]
+        if selected == "As Event":
+            self.frame, self.labels = self.create_info_frame()
+            self.canvas.mpl_connect(
+                "motion_notify_event",
+                lambda event: self.on_motion(event)
+            )
+        self.plot(x=x, y=y, z=z, title=title, selected=selected)
 
     def get_dates(self, widget, multiply):
         time_interval = widget.widgets["Time Interval (min)"].get()

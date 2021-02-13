@@ -79,6 +79,13 @@ class Menu(tk.Menu):
                 catalogue=os.listdir("Algorithms")
             )
         )
+        self.select_menu.add_command(
+            label="Plot Score",
+            command=lambda: SingleSelection(
+                title="Plot Score",
+                catalogue=["As Event", "As Fixed"]
+            )
+        )
         self.help_menu.add_command(
             label="About",
             command=About
