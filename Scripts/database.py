@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from .plot import Plot
 from .entry import EntryFrame
 from .search import SearchFrame
 from .enneagram import Enneagram
@@ -823,6 +824,7 @@ class DatabaseFrame(tk.Frame):
                 icons=self.icons,
                 patterns=user.patterns,
                 algorithm=algorithm,
+                plot=Plot,
                 wide=True
             )
 

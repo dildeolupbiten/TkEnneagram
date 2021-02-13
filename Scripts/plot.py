@@ -4,14 +4,15 @@ from .entry import EntryFrame
 from .enneagram import Enneagram
 from .constants import HOUSE_SYSTEMS
 from .selection import MultipleSelection
+from .treeview import TreeviewToplevel
 from .modules import (
-    np, pd, td, tk, plt, ConfigParser,
+    dt, np, pd, td, tk, plt, ttk, ConfigParser,
     FigureCanvasTkAgg, NavigationToolbar2Tk
 )
 
 
 class Plot(tk.Toplevel):
-    def __init__(self, info, jd, hsys, *args, **kwargs):
+    def __init__(self, info, jd, hsys, icons, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.menu = tk.Menu(master=self)
         self.configure(menu=self.menu)
@@ -89,10 +90,79 @@ class Plot(tk.Toplevel):
             command=lambda: self.command(
                 info=info,
                 hsys=hsys,
-                title=""
+                title="",
+                icons=icons
             )
         )
+        self.combobox_frame = tk.Frame(master=self.left_frame)
         self.plot_button.pack()
+
+    def create_combobox(self, values, hsys, info, icons):
+        label = tk.Label(
+            master=self.combobox_frame,
+            text="Select Dates",
+            fg="red"
+        )
+        label.pack()
+        style = ttk.Style()
+        style.map(
+            "TCombobox",
+            fieldbackground=[("readonly", "white")]
+        )
+        combobox = ttk.Combobox(
+            master=self.combobox_frame,
+            values=values,
+            state="readonly",
+            style="TCombobox"
+        )
+        combobox.pack()
+        button = tk.Button(
+            master=self.combobox_frame,
+            text="Open Enneagram Scores",
+            command=lambda: self.open_enneagram(
+                hsys=hsys,
+                info=info,
+                icons=icons,
+                combobox=combobox
+            )
+        )
+        button.pack()
+
+    @staticmethod
+    def open_enneagram(hsys, info, icons, combobox):
+        value = combobox.get()
+        if value:
+            date = dt.strptime(value, "%d.%m.%Y %H:%M:%S")
+            info["Date"] = date.strftime("%d.%m.%Y")
+            info["Time"] = date.strftime("%H:%M")
+            config = ConfigParser()
+            config.read("defaults.ini")
+            algorithm = config["ALGORITHM"]["selected"]
+            user = Enneagram(
+                year=date.year,
+                month=date.month,
+                day=date.day,
+                hour=date.hour,
+                minute=date.minute,
+                second=date.second,
+                lat=float(info["Latitude"]),
+                lon=float(info["Longitude"]),
+                hsys=HOUSE_SYSTEMS[hsys],
+                icons=icons,
+                utc=True
+            )
+            scores = user.get_all_scores()
+            TreeviewToplevel(
+                values=scores,
+                info=info,
+                jd=user.chart.jd,
+                hsys=HOUSE_SYSTEMS[hsys],
+                icons=icons,
+                patterns=user.patterns,
+                algorithm=algorithm,
+                plot=Plot,
+                wide=True
+            )
 
     def create_label(self, text, date, row):
         label = tk.Label(master=self.date_frame, text=text, fg="red")
@@ -158,7 +228,7 @@ class Plot(tk.Toplevel):
         )
         self.canvas.draw()
 
-    def command(self, info, hsys, title):
+    def command(self, info, hsys, title, icons):
         dates = self.get_dates(widget=self.backward, multiply=-1)
         dates += [self.date]
         dates += self.get_dates(widget=self.forward, multiply=1)
@@ -186,6 +256,15 @@ class Plot(tk.Toplevel):
             total = [round(float(i), 2) for i in total[0] * total[1]]
             x += [date]
             y += [total]
+        self.combobox_frame.destroy()
+        self.combobox_frame = tk.Frame(master=self.left_frame)
+        self.combobox_frame.pack()
+        self.create_combobox(
+            values=[i.strftime("%d.%m.%Y %H:%M:%S") for i in x],
+            hsys=hsys,
+            icons=icons,
+            info=info
+        )
         self.plot(x=x, y=y, title=title)
 
     def get_dates(self, widget, multiply):

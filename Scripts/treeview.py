@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from .plot import Plot
 from .messagebox import MsgBox
 from .modules import np, tk, ttk
 from .spreadsheet import Spreadsheet
@@ -162,6 +161,7 @@ class TreeviewToplevel(tk.Toplevel):
             icons,
             patterns,
             algorithm,
+            plot,
             wide=None,
             *args,
             **kwargs
@@ -201,7 +201,12 @@ class TreeviewToplevel(tk.Toplevel):
             master=self.button_frame,
             text="Plot",
             width=10,
-            command=lambda: Plot(info=info, jd=self.jd, hsys=self.hsys)
+            command=lambda: plot(
+                info=info,
+                jd=self.jd,
+                hsys=self.hsys,
+                icons=icons
+            )
         )
         self.plot_button.pack(side="left")
         self.create_info_widgets(info, patterns, algorithm)
