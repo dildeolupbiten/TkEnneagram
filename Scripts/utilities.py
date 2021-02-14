@@ -353,14 +353,13 @@ def from_xml(filename):
     for i in range(1000000):
         try:
             user_data = []
-            for gender, roddenrating, bdata, adb_link, categories in \
-                    zip(
-                        root[i + 2][1].findall("gender"),
-                        root[i + 2][1].findall("roddenrating"),
-                        root[i + 2][1].findall("bdata"),
-                        root[i + 2][2].findall("adb_link"),
-                        root[i + 2][3].findall("categories")
-                    ):
+            for gender, roddenrating, bdata, adb_link, categories in zip(
+                root[i + 2][1].findall("gender"),
+                root[i + 2][1].findall("roddenrating"),
+                root[i + 2][1].findall("bdata"),
+                root[i + 2][2].findall("adb_link"),
+                root[i + 2][3].findall("categories")
+            ):
                 name = root[i + 2][1][0].text
                 sbdate_dmy = bdata[1].text
                 sbtime = bdata[2].text

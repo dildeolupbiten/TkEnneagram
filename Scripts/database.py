@@ -538,8 +538,8 @@ class DatabaseFrame(tk.Frame):
         check_all.set(False)
         check_uncheck.grid(row=0, column=0, sticky="nw")
         for num, c in enumerate(
-                ["AA", "A", "B", "C", "DD", "X", "XX", "AX"],
-                1
+            ["AA", "A", "B", "C", "DD", "X", "XX", "AX"],
+            1
         ):
             self.update()
             rating = c
@@ -761,9 +761,9 @@ class DatabaseFrame(tk.Frame):
             self.found_categories = {
                 i: j for i, j in enumerate(treeview.get_children())
                 if (
-                        event.widget.get().lower()
-                        in
-                        treeview.item(j)["values"][0].lower()
+                    event.widget.get().lower()
+                    in
+                    treeview.item(j)["values"][0].lower()
                 )
             }
             for i, j in self.found_categories.items():
