@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from .plot import Plot
 from .messagebox import MsgBox
 from .enneagram import Enneagram
 from .constants import HOUSE_SYSTEMS
@@ -277,7 +278,8 @@ class UserEntryForm(tk.Toplevel):
                 wide=True,
                 icons=self.icons,
                 patterns=user.patterns,
-                algorithm=algorithm
+                algorithm=algorithm,
+                plot=Plot
             )
         else:
             MsgBox(
