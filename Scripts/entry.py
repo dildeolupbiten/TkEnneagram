@@ -4,35 +4,22 @@ from .modules import tk, ttk
 
 
 class EntryFrame(tk.Frame):
-    def __init__(
-            self,
-            texts,
-            title,
-            position="horizontal",
-            color="red",
-            *args,
-            **kwargs
-    ):
+
+    def __init__(self, texts, title, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.label = tk.Label(master=self, text=title, fg="red")
-        self.label.grid(row=0, column=0, columnspan=2)
-        self.widgets = self.create_widgets(
-            texts=texts,
-            position=position,
-            color=color
-        )
-        
-    def create_widgets(self, texts, position, color):
+        self.label.pack()
+        self.frame = tk.Frame(master=self)
+        self.frame.pack()
+        self.widgets = self.create_widgets(texts=texts)
+
+    def create_widgets(self, texts):
         widgets = {}
-        for index, text in enumerate(texts):
-            label = tk.Label(master=self, text=text, fg=color)
-            entry = ttk.Entry(master=self, width=5)
-            if position == "horizontal":
-                label.grid(row=1, column=index)
-                entry.grid(row=2, column=index)
-            elif position == "vertical":
-                label.grid(row=index + 1, column=0)
-                entry.grid(row=index + 1, column=1)
+        for index, text in enumerate(texts, 1):
+            label = tk.Label(master=self.frame, text=text, fg="blue")
+            label.grid(row=index, column=0, sticky="w")
+            entry = ttk.Entry(master=self.frame, width=5)
+            entry.grid(row=index, column=1, sticky="w")
             entry.bind(
                 sequence="<KeyRelease>",
                 func=self.delete_nonnumeric_chars
@@ -43,7 +30,8 @@ class EntryFrame(tk.Frame):
     @staticmethod
     def delete_nonnumeric_chars(event):
         try:
-            int(event.widget.get())
+            if event.widget.get() != "-":
+                float(event.widget.get())
         except ValueError:
             index = event.widget.index("insert")
             event.widget.delete(index - 1, "end")

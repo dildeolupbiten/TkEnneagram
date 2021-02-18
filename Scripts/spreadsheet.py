@@ -119,18 +119,18 @@ class Spreadsheet(Workbook):
         for i in self.columns:
             if i == "Category":
                 self.sheet.merge_range(
-                    f"{self.cols[n]}5:{self.cols[n + 2]}5",
+                    f"{self.cols[n]}6:{self.cols[n + 2]}6",
                     i,
                     self.format(align="center", bold=True)
                 )
             else:
                 self.sheet.write(
-                    f"{self.cols[n + 2]}5",
+                    f"{self.cols[n + 2]}6",
                     i,
                     self.format(align="center", bold=True)
                 )
             n += 1
-        for index, cols in enumerate(data, 6):
+        for index, cols in enumerate(data, 7):
             n = 0
             for col in cols:
                 if "in" in col:
@@ -140,9 +140,9 @@ class Spreadsheet(Workbook):
                         self.format()
                     )
                 elif col in [
-                        "Dayscores",
-                        "Effect of Houses",
-                        "Total Scores"
+                    "Dayscores",
+                    "Effect of Houses",
+                    "Total Scores"
                 ]:
                     self.sheet.merge_range(
                         f"{self.cols[n]}{index}:{self.cols[n + 2]}{index}",
@@ -172,9 +172,9 @@ class Spreadsheet(Workbook):
                 n += 1
 
     def write_category(self, info, data):
-        row = 9
+        row = 10
         for index, (k, v) in enumerate(info.items(), 1):
-            if index < 7:
+            if index < 9:
                 self.sheet.merge_range(
                     f"A{index}:B{index}",
                     k,
@@ -187,12 +187,12 @@ class Spreadsheet(Workbook):
                 )
             else:
                 self.sheet.merge_range(
-                    f"D{index - 6}:E{index - 6}",
+                    f"D{index - 8}:E{index - 8}",
                     k,
                     self.format(bold=True)
                 )
                 self.sheet.merge_range(
-                    f"F{index - 6}:J{index - 6}",
+                    f"F{index - 8}:J{index - 8}",
                     v,
                     self.format(bold=False, align="left")
                 )

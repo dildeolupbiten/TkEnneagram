@@ -10,16 +10,24 @@ def find_observed_values(widget, icons):
     ignored_categories = []
     selected_ratings = []
     checkbuttons = {}
-    start = ""
-    end = ""
+    year_from = ""
+    year_to = ""
+    latitude_from = ""
+    latitude_to = ""
+    longitude_from = ""
+    longitude_to = ""
     for i in widget.winfo_children():
         if hasattr(i, "included"):
+            year_from += i.ranges["Year"].widgets["From"].get()
+            year_to += i.ranges["Year"].widgets["To"].get()
+            latitude_from += i.ranges["Latitude"].widgets["From"].get()
+            latitude_to += i.ranges["Latitude"].widgets["To"].get()
+            longitude_from += i.ranges["Longitude"].widgets["From"].get()
+            longitude_to += i.ranges["Longitude"].widgets["To"].get()
             displayed_results += i.displayed_results
             selected_categories += i.included
             ignored_categories += i.ignored
             selected_ratings += i.selected_ratings
-            start += i.start
-            end += i.end
             checkbuttons.update(i.checkbuttons)
             break
     if not displayed_results:
@@ -50,19 +58,22 @@ def find_observed_values(widget, icons):
         selected_ratings = "None"
     config = ConfigParser()
     config.read("defaults.ini")
-    if "event" in checkbuttons:
-        info = {
-            key.title(): "True" if value[0].get() == "0" else "False"
-            for key, value in checkbuttons.items()
-        }
+    info = {
+        key.title(): "True" if value[0].get() == "0" else "False"
+        for key, value in checkbuttons.items()
+    }
+    if year_from and year_to:
+        year_range = f"{year_from} - {year_to}"
     else:
-        info = {"Event": "False", "Human": "True"}
-        info.update(
-            {
-                key.title(): "True" if value[0].get() == "0" else "False"
-                for key, value in checkbuttons.items()
-            }
-        )
+        year_range = "None"
+    if latitude_from and latitude_to:
+        latitude_range = f"{latitude_from} - {latitude_to}"
+    else:
+        latitude_range = "None"
+    if longitude_from and longitude_to:
+        longitude_range = f"{longitude_from} - {longitude_to}"
+    else:
+        longitude_range = "None"
     info.update(
         {
             "Database": config["DATABASE"]["selected"]
@@ -70,7 +81,10 @@ def find_observed_values(widget, icons):
             "House System": config["HOUSE SYSTEM"]["selected"],
             "Rodden Rating": selected_ratings,
             "Category": selected_categories,
-            "Ignored": ignored_categories
+            "Ignored": ignored_categories,
+            "Year Range": year_range,
+            "Latitude Range": latitude_range,
+            "Longitude Range": longitude_range
         }
     )
     path = os.path.join(
@@ -95,17 +109,31 @@ def find_observed_values(widget, icons):
         else:
             path = os.path.join(path, "Event+Human")
     if (
-            info["South Hemisphere"] == "False"
-            and
-            info["North Hemisphere"] == "True"
+        info["South Hemisphere"] == "False"
+        and
+        info["North Hemisphere"] == "True"
     ):
         path = os.path.join(path, "North")
     elif (
-            info["South Hemisphere"] == "True"
-            and
-            info["North Hemisphere"] == "False"
+        info["South Hemisphere"] == "True"
+        and
+        info["North Hemisphere"] == "False"
     ):
         path = os.path.join(path, "South")
+    else:
+        path = path
+    if (
+        info["West Hemisphere"] == "False"
+        and
+        info["East Hemisphere"] == "True"
+    ):
+        path = os.path.join(path, "East")
+    elif (
+        info["West Hemisphere"] == "True"
+        and
+        info["East Hemisphere"] == "False"
+    ):
+        path = os.path.join(path, "West")
     else:
         path = path
     enneagram_scores = {
@@ -117,16 +145,9 @@ def find_observed_values(widget, icons):
             for j in [i - 1, i + 1]
         } for i in range(1, 10)
     }
-    path = os.path.join(
-        path,
-        f"From_{start}_To_{end}"
-    )
     if not os.path.exists(path):
         os.makedirs(path)
     path = os.path.join(path, "observed_values.xlsx")
-    info.update(
-        {"Start Year": start, "End Year": end}
-    )
     Thread(
         target=lambda: start_observed_values(
             displayed_results=displayed_results,

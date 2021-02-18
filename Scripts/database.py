@@ -255,8 +255,6 @@ class DatabaseFrame(tk.Frame):
         self.category_menu = None
         self.treeview_menu = None
         self.entry_menu = None
-        self.start = ""
-        self.end = ""
         self.pressed_return = 0
         self.info_var = tk.StringVar()
         self.info_var.set("0")
@@ -301,13 +299,13 @@ class DatabaseFrame(tk.Frame):
         )
         self.category_label = tk.Label(
             master=self.entry_button_frame,
-            text="Categories:",
+            text="Categories",
             fg="red"
         )
         self.category_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
         self.rrating_label = tk.Label(
             master=self.entry_button_frame,
-            text="Rodden Rating:",
+            text="Rodden Rating",
             fg="red"
         )
         self.rrating_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
@@ -323,14 +321,18 @@ class DatabaseFrame(tk.Frame):
             command=self.select_ratings
         )
         self.rating_button.grid(row=2, column=1, padx=5, pady=5)
-        self.entry_frame = EntryFrame(
-            master=self.topframe,
-            texts=["From", "To"],
-            title="Select Year Range"
-        )
-        self.entry_frame.grid(row=10, column=0, columnspan=4, pady=10)
+        self.ranges = {}
+        self.range_frame = tk.Frame(master=self.topframe)
+        self.range_frame.grid(row=3, column=0, columnspan=4, pady=10)
+        for i in ["Year", "Latitude", "Longitude"]:
+            self.ranges[i] = EntryFrame(
+                master=self.range_frame,
+                texts=["From", "To"],
+                title=f"Select {i} Range"
+            )
+            self.ranges[i].pack(side="left", padx=10)
         self.button_frame = tk.Frame(master=self.topframe)
-        self.button_frame.grid(row=11, column=0, columnspan=4, pady=10)
+        self.button_frame.grid(row=4, column=0, columnspan=4, pady=10)
         self.create_checkbutton()
         self.get_button = tk.Button(
             master=self.button_frame,
@@ -367,7 +369,9 @@ class DatabaseFrame(tk.Frame):
             "male",
             "female",
             "North Hemisphere",
-            "South Hemisphere"
+            "South Hemisphere",
+            "West Hemisphere",
+            "East Hemisphere"
         )
         for i, j in enumerate(names):
             var = tk.StringVar()
@@ -412,8 +416,14 @@ class DatabaseFrame(tk.Frame):
         female = self.checkbuttons["female"][0]
         north = self.checkbuttons["North Hemisphere"][0]
         south = self.checkbuttons["South Hemisphere"][0]
-        self.start = self.entry_frame.widgets["From"].get()
-        self.end = self.entry_frame.widgets["To"].get()
+        west = self.checkbuttons["West Hemisphere"][0]
+        east = self.checkbuttons["East Hemisphere"][0]
+        year_from = self.ranges["Year"].widgets["From"].get()
+        year_to = self.ranges["Year"].widgets["To"].get()
+        latitude_from = self.ranges["Latitude"].widgets["From"].get()
+        latitude_to = self.ranges["Latitude"].widgets["To"].get()
+        longitude_from = self.ranges["Longitude"].widgets["From"].get()
+        longitude_to = self.ranges["Longitude"].widgets["To"].get()
         for record in self.database:
             if record[3] not in self.selected_ratings:
                 continue
@@ -457,6 +467,38 @@ class DatabaseFrame(tk.Frame):
                 record[7] < 0
             ):
                 continue
+            if (
+                isinstance(record[8], str)
+                and
+                west.get() == "1"
+                and
+                "w" in record[8]
+            ):
+                continue
+            if (
+                isinstance(record[8], float)
+                and
+                west.get() == "1"
+                and
+                record[8] < 0
+            ):
+                continue
+            if (
+                isinstance(record[8], str)
+                and
+                east.get() == "1"
+                and
+                "e" in record[8]
+            ):
+                continue
+            if (
+                isinstance(record[8], float)
+                and
+                east.get() == "1"
+                and
+                record[8] > 0
+            ):
+                continue
             if record[0] in [3546, 68092]:
                 continue
             if not any(
@@ -471,14 +513,31 @@ class DatabaseFrame(tk.Frame):
                 continue
             year = int(record[4].split()[2])
             if (
-                self.start
+                year_from
                 and
-                self.end
-                and not int(self.start) <= year <= int(self.end)
+                year_to
+                and not int(year_from) <= year <= int(year_to)
+            ):
+                continue
+            latitude = convert_coordinates(record[7])
+            if (
+                latitude_from
+                and
+                latitude_to
+                and not float(latitude_from) <= latitude < float(latitude_to)
+            ):
+                continue
+            longitude = convert_coordinates(record[8])
+            if (
+                longitude_from
+                and
+                longitude_to
+                and not float(longitude_from) <= longitude < float(longitude_to)
             ):
                 continue
             self.displayed_results += [record]
         if not display:
+            self.info_var.set(len(self.displayed_results))
             self.inform_user(message="gotten")
 
     def display_results(self):

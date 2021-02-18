@@ -44,13 +44,13 @@ class Results(tk.Toplevel):
         frame = tk.Frame(master=self)
         frame.pack(fill="both")
         for index, (k, v) in enumerate(info.items()):
-            if index < 6:
+            if index < 8:
                 column = 0
                 row = index
             else:
                 column = 4
-                row = index - 6
-                if index == 6:
+                row = index - 8
+                if index == 8:
                     f = tk.Frame(master=frame, width=20)
                     f.grid(row=row, column=3)
             for i, j in enumerate([k, ":", v]):
